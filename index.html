@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>FeatherTrace3D · 单目羽毛球三维轨迹重建</title>
+  <meta name="description" content="从一部手持手机重建整回合羽毛球三维轨迹。含真实回放、双目参照、外观消融与同拟合器对照。">
+  <link rel="icon" href="mark.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
+  <script defer src="assets/replays.js"></script><script defer src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#top">跳到正文</a>
+<header class="nav"><div class="wrap nav-inner">
+  <a class="brand" href="#top"><img src="mark.svg" alt="" width="27" height="27">FeatherTrace3D</a>
+  <nav aria-label="章节"><a href="#replay">实拍回放</a><a href="#question">研究问题</a><a href="#overview">Overview</a><a href="#contributions">四项贡献</a><a href="#results">实验结果</a><a href="#limits">局限与下一步</a></nav>
+</div></header>
+<main>
+<section class="masthead wrap" id="top" aria-labelledby="paper-name">
+  <h1 id="paper-name" lang="en">Feather<span>Trace</span><em>3D</em></h1>
+  <p class="paper-title" lang="en">Monocular Trajectory Reconstruction with Local Appearance,<br class="wide-break"> Rally-Level Modeling, and Physical Refinement</p>
+  <p class="premise">从一部手持手机的视频，重建羽毛球整回合的三维轨迹。</p>
+  <div class="actions">
+    <button class="pill paper-pending" type="button" disabled>论文 · arXiv 待上线</button>
+    <a class="pill primary" href="#overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8v5H8z M3 16h7v5H3z M14 16h7v5h-7z M12 8v4 M6.5 16v-4h11v4"/></svg>方法总览</a>
+  </div>
+</section>
+<section class="wrap teaser" id="replay" aria-label="真实回合同步回放">
+  <div class="viewer">
+    <div class="viewer-grid">
+      <figure><figcaption class="visual-label"><b>单目输入</b><span>手持手机 A</span></figcaption><div class="frame"><video id="video" muted playsinline preload="metadata" aria-label="输入手机实拍录像"></video><canvas id="overlay" aria-hidden="true"></canvas></div></figure>
+      <figure><figcaption class="visual-label"><b>三维重建</b><span><i class="sw line"></i> 预测轨迹　<i class="sw dot"></i> 双目参考</span></figcaption><div class="frame court"><canvas id="scene" aria-label="可拖动旋转的三维球场与轨迹" role="img"></canvas></div></figure>
+    </div>
+    <div class="controls"><button id="play" type="button" aria-label="播放回合">播放</button><input id="seek" type="range" aria-label="选择视频帧" min="0" max="178" value="0"><output id="time">0.00 s</output><button id="view" type="button">切换到侧视</button></div>
+    <div class="replay-detail"><span id="caseInfo"></span><span id="obsInfo"></span></div><p class="error" id="videoError" role="status" hidden></p>
+  </div>
+  <div class="case-gallery" role="group" aria-label="选择实拍片段">
+    <button type="button" data-case="case07_A4" aria-pressed="true"><img src="assets/case07_A4.jpg" alt=""><span><b>Case 07</b><small>论文首页样例</small></span></button>
+    <button type="button" data-case="case05_A8" aria-pressed="false"><img src="assets/case05_A8.jpg" alt=""><span><b>Case 05</b><small>接近总体均值</small></span></button>
+    <button type="button" data-case="case20_A1" aria-pressed="false"><img src="assets/case20_A1.jpg" alt=""><span><b>Case 20</b><small>较高偏差样例</small></span></button>
+  </div>
+  <p class="figure-note">手机 A 是重建的唯一输入，画面中的圆圈标出检测球点。拖动右图可旋转球场。浅色点来自固定手机 B、C，只显示通过质量筛选且时间差不超过 10 毫秒的参考位置。<a href="assets/teaser.png" target="_blank" rel="noopener">论文首图</a></p>
+</section>
+
+<section class="wrap section paper-intro" id="question">
+  <p class="kicker" lang="en">RESEARCH QUESTION</p><h2>一部手机能恢复多少三维信息？</h2>
+  <p class="intro">高远球需要拍下整个球场，画面里的球往往只剩几个模糊像素。乒乓球的台面反弹可以提供深度线索，羽毛球在两次击球之间却没有这样的已知接触面。MonoTrack 用球员姿态提出击球分段，拟合结果依赖分段和起点。时序网络能补全漏检，但输出的深度仍可能与原片中的球点不一致。我们的出发点是让网络先给出完整球路，再允许原始图像观测和飞行动力学共同修改它。</p>
+</section>
+<section class="method-band" id="overview"><div class="wrap section" id="method">
+  <div class="section-title"><p class="kicker">METHOD</p><h2 lang="en">Overview</h2><p class="intro">一帧球点只给出视线方向。FeatherTrace3D 用局部外观和整回合运动估计深度，再以图像观测、击球时刻和飞行动力学校正轨迹。</p></div>
+  <figure class="overview-figure">
+    <button id="enlargeOverview" class="figure-button" type="button" aria-label="放大论文方法总览图" aria-haspopup="dialog"><img src="assets/overview.svg" width="2200" height="827" alt="FeatherTrace3D 方法总览，从左至右为观测与局部外观、整回合主网络、共享重投影反馈和联合物理拟合"><span>放大原图 ⤢</span></button>
+    <figcaption>论文图 2 · 从左向右读到最终三维轨迹。右下角是同一真实回合的侧视轨迹和高度变化，橙点标出击球事件。<a href="assets/overview.svg" target="_blank" rel="noopener">打开矢量原图</a></figcaption>
+  </figure>
+  <div class="method-notes">
+    <article><h3>从像素到球路 <span lang="en">Pipeline</span></h3><p>TrackNetV3 使用作者公开权重生成候选球点。系统结合球点、13 个球场标志点、24 × 24 灰度裁片和热图生成三维预测，再以这条轨迹为软约束，联合拟合飞行状态、阻力和击球时刻。</p></article>
+    <article><h3>网络如何估计深度 <span lang="en">Network</span></h3><p>主网络先在最多 192 帧的窗口内编码运动，再让整回合的观测相互关联，补足漏检帧。共享的修正网络把预测投回原画面，比较球点偏差，迭代五轮后沿视线稳定轨迹。</p></article>
+  </div>
+</div></section>
+<dialog id="overviewDialog" aria-labelledby="dialogTitle"><div class="dialog-bar"><h3 id="dialogTitle">Overview · 方法总览</h3><button type="button" id="zoomOverview" aria-pressed="false">放大细节</button><button id="closeOverview" type="button" autofocus>关闭</button></div><div class="figure-scroll" tabindex="0" aria-label="放大后可滚动查看全图"><img src="assets/overview.svg" alt="论文方法总览高清矢量图"></div></dialog>
+
+<section class="wrap section" id="contributions" aria-labelledby="contrib-title">
+  <p class="kicker" lang="en">CONTRIBUTIONS</p><h2 id="contrib-title">论文的四项贡献</h2>
+  <ol class="contrib-list">
+    <li><h3>逐帧神经预测 <span lang="en">Neural prediction</span></h3>
+      <p>网络保留球的局部外观，从短时运动读到整回合，再用共享的重投影反馈预测每一帧的三维位置，包括漏检帧和击球帧。在论文比较的学习方法中，它给出了平均误差最低的神经预测。用这条轨迹初始化并约束后续拟合，56 个渲染回合全部收敛，平均拟合误差从几何初值的 <strong>1.24 米降到 0.50 米</strong>。</p></li>
+    <li><h3>联合物理修正 <span lang="en">Joint physical refinement</span></h3>
+      <p>拟合器回到原视频的二维球点，以网络轨迹为软约束，用鲁棒目标联合估计各飞行段的状态、阻力和可增删的击球事件。在同一批 56 个渲染回合上，单用网络的平均误差为 <strong>1.27 米</strong>，同一拟合器从几何初值出发为 <strong>1.24 米</strong>，完整方法为 <strong>0.50 米</strong>。单核 CPU 拟合一个回合约需 1.6 秒。</p></li>
+    <li><h3>单目深度的精度下界 <span lang="en">Cramér–Rao analysis</span></h3>
+      <p>对于含水平运动的飞行段，我们证明已知重力能排除绕固定相机中心整体缩放的歧义，推导单段飞行深度精度的闭式近似，并计算逐回合的 Cramér–Rao 下界。在标定准确、模型匹配的 28 个渲染回合中，三维 RMSE 与各自下界之比的中位数约为 <strong>1.4 倍</strong>。进一步提供真实相机参数和阻力定律，能解释大部分剩余差距。</p>
+      <details class="theory contribution-proof" id="theory"><summary>展开下界推导与飞行时长演示</summary>
+  <p class="intro">我们先问哪些三维轨迹会产生完全相同的像素，再问即使飞行模型正确，带噪声的像素允许把深度估到多准。</p>
+  <figure class="ray-figure"><img src="assets/ray-ambiguity.svg" alt="蓝线是原轨迹，橙色虚线沿相机射线缩放到 0.8 倍。二者的二维投影重合，三维侧视和逐帧距离却明显不同。"><figcaption>图中把一条轨迹绕相机中心缩放到 0.8 倍。左图的像素轨迹完全重合，中图的高度不同。缩放后的轨迹仅用于说明透视几何。</figcaption></figure>
+  <div class="derivation">
+    <article><h3>单帧给方向，重力给尺度</h3><p>设相机中心 <i>C</i> 固定、时间戳和重力已知。把轨迹缩放为 <i>pₛ = C + s(p − C)</i>，每个时刻的像素都相同。要求两条轨迹又都服从重力和二次阻力，把速度与加速度代入运动方程，可得</p>
+      <p class="math-line" aria-label="s 减一乘重力向量，等于 s k 减 s 的平方 k 下标 s，乘速度大小和速度向量">(s − 1)<b>g</b> = (sk − s²k<sub>s</sub>)‖<b>v</b>‖<b>v</b></p>
+      <p>左边竖直，右边沿速度方向。只要飞行中有一个时刻速度含水平分量，等式就迫使 <i>s = 1</i>。这排除了整体缩放；未知击球时刻、短段或长时间漏检仍会使某些深度难以确定。</p></article>
+    <article><h3>飞行越短，曲率越难测准</h3><p>先忽略阻力，假设深度 <i>z</i> 变化较小。在重力的像面方向上，用 <i>u(t) ≈ a + bt + ct²</i> 拟合像素轨迹。其曲率系数满足 <i>|c| ≈ f g<sub>⊥</sub>/(2z)</i>。对时长 <i>T</i> 内的 <i>N</i> 个均匀采样帧，若像素噪声独立且标准差为 σ，则 <i>Var(ĉ) ≈ 180σ²/(NT⁴)</i>。将曲率的不确定性传到深度，得到</p>
+      <p class="math-line" aria-label="深度标准差约等于二十六点八乘像素标准差乘深度平方，除以焦距、横向重力分量、帧数平方根和时长平方的乘积">σ<sub>z</sub> ≈ <span class="fraction"><span>26.8 σ z²</span><span>f g<sub>⊥</sub> √N T²</span></span></p>
+      <p><i>f</i> 是像素焦距，<i>g<sub>⊥</sub></i> 是垂直于视线的重力分量。固定帧率下，帧数也随时长增加，深度标准差约按 <i>T<sup>−5/2</sup></i> 下降。</p></article>
+  </div>
+  <div class="flight-demo"><div><b>改变可见飞行时长</b><p>固定 30 帧/秒、深度 20 米、焦距 1,313 像素、像素噪声 2 像素、横向重力约 9 米/秒²。这里单独演示无阻力近似。</p></div><div><div class="tabs" id="flightTimes" role="group" aria-label="可见飞行时长"><button type="button" data-duration="0.5" aria-pressed="true">0.5 秒</button><button type="button" data-duration="1" aria-pressed="false">1 秒</button><button type="button" data-duration="1.5" aria-pressed="false">1.5 秒</button></div><output id="flightPrecision" aria-live="polite">15 帧 · 深度标准差约 1.88 米</output></div></div>
+  <article class="rally-bound"><h3>整回合的局部下界</h3><p>正式计算保留阻力，让各段初始状态、阻力系数和击球时刻组成参数 θ。只堆叠能看见球的帧，得到像素观测 <i>y = h(θ) + ε</i>，高斯噪声协方差为 Ω。像素对参数的敏感度记为 <i>H = ∂h/∂θ</i>，三维轨迹对参数的敏感度记为 <i>G = ∂X/∂θ</i>。</p>
+    <p class="math-line">I<sub>obs</sub> = Hᵀ Ω⁻¹ H <span class="math-gap"> </span> Cov(X̂) ⪰ G I<sup>†</sup> Gᵀ</p>
+    <p>前式是像素提供的 Fisher 信息，后式把可用信息 <i>I</i> 映射为轨迹协方差的下界，† 表示伪逆。若某个参数变化完全不改变像素，却会改变目标位置，仅靠这些像素就无法估出该方向。推导针对局部无偏估计的可估方向；论文的数值计算另计入阻力先验。带学习先验的估计器可能低于这项局部基准。<a href="#bound-results">对照逐回合实测值</a></p></article>
+  <details class="network theory-details"><summary>从观测似然到轨迹误差界 <span>推导细节与标定假设</span></summary>
+    <p>在选定的击球事件结构附近作局部线性化。若 Ω 已知且与参数无关，高斯对数似然为常数减去 ½(y − h)ᵀΩ⁻¹(y − h)。对 θ 求导得到得分向量 HᵀΩ⁻¹(y − h)，对其外积取期望便得到 I<sub>obs</sub>。渲染实验还加入模拟器中共享阻力系数的先验信息，击球时刻作为未知量。</p>
+    <p>对于每个信息为零的参数方向 a，只有当 Ga = 0，目标轨迹的这个估计问题才不受该方向影响。将信息伪逆映射到可估目标的三维位置，取协方差迹可得到平方距离的界，按目标帧汇总并开方即可与轨迹 RMSE 对照。</p>
+    <p>如果标定 γ 也需从数据估计，在标定信息块可逆时，有效信息为 I<sub>θθ</sub> − I<sub>θγ</sub>I<sub>γγ</sub>⁻¹I<sub>γθ</sub>。减去的项半正定，说明标定不确定性会减少或保持可用信息。</p>
+  </details>
+</details></li>
+    <li><h3>手持实拍基准与评估 <span lang="en">Real hand-held benchmark and evaluation</span></h3>
+      <p>我们用三部手机采集了 <strong>15 段实拍回合，共 2,415 帧</strong>。手持手机 A 独立提供推理输入，两部固定手机 B、C 从另外两个视角给出双目参考。在可配对的 1,600 帧上，平均三维参考偏差为 <strong>0.40 米</strong>，物理修正使全部 15 段的平均偏差都下降。</p></li>
+  </ol>
+</section>
+<section class="wrap section" id="results">
+  <p class="kicker">EXPERIMENTS</p><h2>精度提升来自哪一步？</h2>
+  <dl class="metrics-grid"><div><dt>实拍 · 平均参考偏差</dt><dd>0.398 <small>m</small></dd><div>15 段实拍，1,600 个配对帧</div></div><div><dt>渲染 · 平均三维误差</dt><dd>0.498 <small>m</small></dd><div>56 个回合，各回合等权</div></div><div><dt>实拍 · 物理拟合后改善</dt><dd>15 <small>/ 15 段</small></dd><div>与同一片段的稳定后神经预测比较</div></div></dl>
+  <div class="result-grid"><article class="chart-card">
+    <h3>单独使用网络或物理模型，会怎样？</h3>
+    <div class="tabs" id="metricTabs" role="group" aria-label="指标数据集"><button type="button" data-set="real" aria-pressed="true">真实录像</button><button type="button" data-set="all" aria-pressed="false">全部渲染</button><button type="button" data-set="matched" aria-pressed="false">模型匹配</button><button type="button" data-set="mismatch" aria-pressed="false">模型失配</button></div>
+    <p class="chart-unit" id="chartUnit"></p><div id="bars"></div><p class="caption" id="chartNote"></p>
+  </article><article class="ablation"><p class="kicker">APPEARANCE ABLATION</p><h3>局部外观有多少贡献？</h3><p>48 个仿真回合上，从头训练的相同预算对照给出了逐步加入信息后的平均误差。</p>
+    <table><thead><tr><th>网络输入</th><th>神经预测</th><th>物理拟合后</th></tr></thead><tbody>
+    <tr><td>单帧坐标</td><td>1.580 m</td><td>0.777 m</td></tr><tr><td>时序坐标</td><td>1.152 m</td><td>0.627 m</td></tr><tr class="accentrow"><td>时序＋对齐外观</td><td>0.779 m</td><td>0.602 m</td></tr><tr><td>时序＋打乱外观训练</td><td>1.195 m</td><td>0.637 m</td></tr></tbody></table>
+    <p class="caption">用论文模型测试 56 个渲染回合时，仅打乱裁片与热图的帧序，神经误差增加 0.115 m（95% 区间 0.005 至 0.225）。物理拟合后增量为 0.017 m，区间跨零。</p>
+  </article></div>
+  <details class="network"><summary>展开论文主表 <span>56 个渲染回合 · 15 段实拍</span></summary><div class="table-scroll"><table id="fullTable"><caption>平均三维距离，单位为米，越低越好。渲染按回合等权，实拍按配对帧等权。</caption><thead><tr><th>方法</th><th>模型匹配</th><th>模型失配</th><th>全部渲染</th><th>实拍参考偏差</th></tr></thead><tbody></tbody></table></div><p class="caption">所有方法共用检测与标定。学习基线在同一羽毛球适配协议下重训，各模型的预训练经历不同。MonoTrack core 采用自带击球候选及假设端点平面；oracle 额外获知击球帧与端点。</p></details>
+  <article class="bound-results" id="bound-results"><h3>逐回合估计误差离下界有多远？</h3>
+    <div class="table-scroll"><table><caption>前两列数值分别是各回合 RMS 下界和实测 RMSE 的均值。最后一列先逐回合相除，再取中位数。</caption><thead><tr><th>场景</th><th>RMS 下界（米）</th><th>实测 RMSE（米）</th><th>逐回合比值中位数</th></tr></thead><tbody>
+      <tr class="accentrow"><td>匹配渲染 · 28 回合</td><td>0.164</td><td>0.264</td><td>1.37 倍</td></tr><tr><td>失配渲染 · 28 回合</td><td>0.406</td><td>1.080</td><td>2.80 倍</td></tr><tr><td>全部渲染 · 56 回合</td><td>0.285</td><td>0.672</td><td>1.95 倍</td></tr><tr><td>实拍 · 15 段，代入估计</td><td>0.233</td><td>0.502</td><td>3.97 倍</td></tr></tbody></table></div>
+    <p class="caption">渲染下界在仿真轨迹处计算，把给定相机参数视为准确。实拍下界在拟合解处代入估计，实测偏差以 B/C 双目轨迹为参照。主表的 0.398 米按配对帧平均距离计分，此处实拍 0.502 米先对每段计算 RMSE，再对 15 段平均。</p>
+    <p class="finding"><b>差距从哪里来？</b>在其中 24 个渲染回合上，依次提供真实击球时刻、真实相机参数和模拟器阻力定律，RMSE/下界的中位数从 1.87 变为 1.96、1.55 和 1.13。相机标定和阻力失配解释了这组实验中相当一部分差距。</p>
+  </article>
+<article class="followup" id="progress">
+  <p class="kicker">FOLLOW-UP &nbsp; / &nbsp; 2026.11.20</p><h3>同一物理拟合器下的网络对照</h3>
+  <p class="intro">论文主表把完整管线与 TT4D 的神经输出比较。为检验网络本身的贡献，后续实验也把 TT4D 的输出送入同一个冻结的物理拟合器，并检验增加击球候选是否有帮助。</p>
+  <div class="progress-grid"><div class="table-scroll"><table><thead><tr><th>相同物理拟合器</th><th>渲染误差</th><th>实拍参考偏差</th></tr></thead><tbody><tr><td>FeatherTrace3D · 论文 v6.5</td><td>0.498 m</td><td>0.398 m</td></tr><tr><td>FeatherTrace3D · 增加击球候选</td><td>0.475 m</td><td>0.410 m</td></tr><tr><td>TT4D ＋ 同一拟合器</td><td>0.467 m</td><td>0.393 m</td></tr></tbody></table><p class="caption">44 个开发回合选定规则。评估沿用 56 个渲染回合与 15 段实拍，其中渲染集此前参与过假设形成。</p></div>
+  <div class="takeaway"><h3>物理拟合的收益最稳定</h3><p>增加候选击球时刻改善了渲染结果，实拍参考偏差略升。该变体与 TT4D 同拟合器的渲染配对差约 0.009 m，95% 区间为 −0.088 至 +0.109 m。现有对照尚不能确立网络间的优势。</p></div></div>
+</article></section>
+<section class="wrap section last" id="limits"><p class="kicker">DISCUSSION</p><h2>局限与下一步</h2><div class="limits-grid"><article><h3>真实深度的参照精度</h3><p>本次实拍来自同一场地、同一次录制。B、C 两部手机的标定和同步误差会计入偏差。下一步可用测量控制点或动捕独立核查参考精度。</p></article><article><h3>长遮挡与相机位移</h3><p>超过 2 秒的检测空白更依赖网络先验。目前逐帧标定主要补偿固定相机中心附近的旋转。跨场馆、侧向视角和明显平移仍需独立验证。</p></article></div>
+  <div class="resources"><a href="assets/real-results.csv" download>15 段实拍结果 CSV</a><a href="https://zdc852636-code.github.io/st3d-three-camera-report/" target="_blank" rel="noopener">完整三机位回放</a></div>
+</section>
+</main><footer><div class="wrap"><b>FeatherTrace3D</b><a href="#top">回到顶部 ↑</a></div></footer>
+</body></html>
