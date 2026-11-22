@@ -55,6 +55,18 @@
     <article><h3>从像素到球路 <span lang="en">Pipeline</span></h3><p>TrackNetV3 使用作者公开权重生成候选球点。系统结合球点、13 个球场标志点、24 × 24 灰度裁片和热图生成三维预测，再以这条轨迹为软约束，联合拟合飞行状态、阻力和击球时刻。</p></article>
     <article><h3>网络如何估计深度 <span lang="en">Network</span></h3><p>主网络先在最多 192 帧的窗口内编码运动，再让整回合的观测相互关联，补足漏检帧。共享的修正网络把预测投回原画面，比较球点偏差，迭代五轮后沿视线稳定轨迹。</p></article>
   </div>
+  <section class="compute-ledger" id="compute" aria-labelledby="compute-title">
+    <h3 id="compute-title">训练规模与逐回合耗时</h3>
+    <dl>
+      <div><dt>主网络训练</dt><dd><strong>260 万条</strong> 仿真轨迹</dd><dd>从随机权重预训练 17 轮，历时 <b>6 小时 14 分</b>。随后在 10 万个仿真整回合上做时序适配和全网络微调，两阶段复用同一批数据。</dd></div>
+      <div><dt>网络推理</dt><dd><strong>6.87 ms</strong> / 192 帧</dd><dd>RTX 5090 上，主网络平均 2.14 ms，五轮共享修正合计 4.73 ms。每次输入一段，预热后测量 10 次，权重和输入已在显存中。</dd></div>
+      <div><dt>物理修正</dt><dd><strong>1.42 s</strong> / 回合</dd><dd>输入一个回合的可见球点、相机参数和神经初值，逐回合求解。24 个渲染回合上，优化实现的单核 CPU 耗时平均 1.42 秒，中位数 0.79 秒。相同输入下，参考实现平均 25.5 秒。</dd></div>
+    </dl>
+    <details class="network"><summary>计时范围与评估样本</summary>
+      <p>预训练记录了 690,625 次更新，用时包括在线渲染、限载等待、保存和验证。后续的时序适配和全网络微调分别更新 300,000 和 50,000 次。两轮对照实验的合计用时分别为 11.32 和 9.40 小时，各自包含准备、多个配置和验证。</p>
+      <p>GPU 计时从输入张量就绪开始，到五轮修正结束。物理优化器则固定网络权重，用每个回合自身的观测估计飞行状态、共享阻力和击球时刻。论文主表在 56 个渲染回合上另测了网络到物理拟合的总耗时，单核 CPU 平均为 <b>1.7 秒/回合</b>，检测和标定另计。精度评估还包含 15 段实拍，其中 1,600 帧与独立双目参考配对。</p>
+    </details>
+  </section>
 </div></section>
 <dialog id="overviewDialog" aria-labelledby="dialogTitle"><div class="dialog-bar"><h3 id="dialogTitle">Overview · 方法总览</h3><button type="button" id="zoomOverview" aria-pressed="false">放大细节</button><button id="closeOverview" type="button" autofocus>关闭</button></div><div class="figure-scroll" tabindex="0" aria-label="放大后可滚动查看全图"><img src="assets/overview.svg" alt="论文方法总览高清矢量图"></div></dialog>
 
@@ -86,22 +98,32 @@
     <li id="depth"><h3>单目深度的精度下界 <span lang="en">Cramér–Rao analysis</span></h3>
       <p class="lead">同一条二维曲线可以由深度不同的轨迹投影而成。已知重力能排除整体缩放，观测持续多久、像素有多准，共同决定剩下的深度不确定性。</p>
       <figure class="ray-figure"><img src="assets/ray-ambiguity.svg" alt="蓝线是原轨迹，橙色虚线沿相机射线缩放到 0.8 倍。二者的二维投影重合，三维侧视和逐帧距离却明显不同。"><figcaption>图中把一条轨迹绕相机中心缩放到 0.8 倍。左图的像素轨迹完全重合，中图的高度不同。缩放后的轨迹仅用于说明透视几何。</figcaption></figure>
-      <p class="study-end"><strong>读图</strong> 左图的二维投影重合，中图的三维高度已经分开。展开推导可以看到，为什么横向飞行与重力能约束尺度，以及把可见飞行从半秒延长到一秒，对估计精度有多大影响。</p>
+      <div class="depth-law"><div><strong>可见飞行加倍，深度能估准多少？</strong><p>在近似恒深、忽略阻力的单段飞行中，固定帧率和其他条件，可见时长翻倍，深度标准差约降至原来的 18%。</p></div><div class="display-law" aria-label="固定帧率时，深度标准差正比于飞行时长的负二分之五次方">σ<sub>z</sub> ∝ T<sup>−5/2</sup></div></div>
       <details class="theory contribution-proof" id="theory"><summary>展开下界推导与飞行时长演示</summary>
   <p class="intro">我们先问哪些三维轨迹会产生完全相同的像素，再问即使飞行模型正确，带噪声的像素允许把深度估到多准。</p>
 
   <div class="derivation">
-    <article><h3>单帧给方向，重力给尺度</h3><p>设相机中心 <i>C</i> 固定、时间戳和重力已知。把轨迹缩放为 <i>pₛ = C + s(p − C)</i>，每个时刻的像素都相同。要求两条轨迹又都服从重力和二次阻力，把速度与加速度代入运动方程，可得</p>
+    <article><h3>为什么重力能固定尺度？</h3><p>把相机坐标写成 (X, Y, Z)。针孔投影只保留 X/Z 和 Y/Z，因此把三个坐标同时乘以正数 s，每一帧的像素都相同。设相机中心 C 固定，时间戳和重力已知，将原轨迹改为 pₛ = C + s(p − C)，则 vₛ = sv，加速度也随之乘以 s。</p>
+      <div class="proof-lines" aria-label="从两条轨迹分别计算缩放后的加速度"><div>原轨迹缩放：aₛ = s(g − k‖v‖v)</div><div>缩放后仍须满足：aₛ = g − kₛs²‖v‖v</div></div>
+      <p>k 和 kₛ 分别是两条轨迹的二次阻力系数。令上面两式相等，移项得到</p>
       <p class="math-line" aria-label="s 减一乘重力向量，等于 s k 减 s 的平方 k 下标 s，乘速度大小和速度向量">(s − 1)<b>g</b> = (sk − s²k<sub>s</sub>)‖<b>v</b>‖<b>v</b></p>
       <p>左边竖直，右边沿速度方向。只要飞行中有一个时刻速度含水平分量，等式就迫使 <i>s = 1</i>。这排除了整体缩放；未知击球时刻、短段或长时间漏检仍会使某些深度难以确定。</p></article>
-    <article><h3>飞行越短，曲率越难测准</h3><p>先忽略阻力，假设深度 <i>z</i> 变化较小。在重力的像面方向上，用 <i>u(t) ≈ a + bt + ct²</i> 拟合像素轨迹。其曲率系数满足 <i>|c| ≈ f g<sub>⊥</sub>/(2z)</i>。对时长 <i>T</i> 内的 <i>N</i> 个均匀采样帧，若像素噪声独立且标准差为 σ，则 <i>Var(ĉ) ≈ 180σ²/(NT⁴)</i>。将曲率的不确定性传到深度，得到</p>
+    <article><h3>为什么时长的指数是 −5/2？</h3><p>暂时忽略阻力并把深度 z 视作近似恒定。取像面向上为正，把重力引起的位移 −g<sub>⊥</sub>t²/2 乘以 f/z，便得到像素位移。像素轨迹近似为 u(t) = a + bt + ct²，其中 c = −fg<sub>⊥</sub>/(2z)。轨迹越远，画面中能测到的弯曲就越小。</p>
+      <p>在时长 T 内均匀采 N 帧，设像素噪声独立、标准差为 σ。由观测估计二次项系数 c，再用 z = −fg<sub>⊥</sub>/(2c) 将曲率换算成深度。</p>
+      <details class="network theory-details"><summary>系数 180 从哪里来？</summary>
+        <p>把时间居中为 τᵢ = tᵢ/T − ½。对于对称均匀采样，去除常数项和线性项后，τᵢ² 剩下 qᵢ = τᵢ² − mean(τ²)。在连续均匀近似下，均值为 1/12，而 (τ² − 1/12)² 在 [−½, ½] 上的积分为 1/180。</p>
+        <div class="proof-lines"><div>Var(ĉ) = σ² / Σᵢ[T²qᵢ]² ≈ 180σ²/(NT⁴)</div><div>|dz/dc| = 2z²/(fg<sub>⊥</sub>)</div></div>
+        <p>把第一行的方差开方，再乘以第二行的灵敏度，就得到下面的系数 2√180 ≈ 26.8。</p>
+      </details>
       <p class="math-line" aria-label="深度标准差约等于二十六点八乘像素标准差乘深度平方，除以焦距、横向重力分量、帧数平方根和时长平方的乘积">σ<sub>z</sub> ≈ <span class="fraction"><span>26.8 σ z²</span><span>f g<sub>⊥</sub> √N T²</span></span></p>
-      <p><i>f</i> 是像素焦距，<i>g<sub>⊥</sub></i> 是垂直于视线的重力分量。固定帧率下，帧数也随时长增加，深度标准差约按 <i>T<sup>−5/2</sup></i> 下降。</p></article>
+      <p><i>f</i> 是以像素计的焦距，<i>g<sub>⊥</sub></i> 是垂直于视线的重力分量。时长翻倍时，二次位移放大 4 倍。固定帧率还让样本数翻倍，独立噪声的平均效果再改善 √2 倍，所以标准差缩小到 1/(4√2)。</p></article>
   </div>
   <div class="flight-demo"><div><b>改变可见飞行时长</b><p>固定 30 帧/秒、深度 20 米、焦距 1,313 像素、像素噪声 2 像素、横向重力约 9 米/秒²。这里单独演示无阻力近似。</p></div><div><div class="tabs" id="flightTimes" role="group" aria-label="可见飞行时长"><button type="button" data-duration="0.5" aria-pressed="true">0.5 秒</button><button type="button" data-duration="1" aria-pressed="false">1 秒</button><button type="button" data-duration="1.5" aria-pressed="false">1.5 秒</button></div><output id="flightPrecision" aria-live="polite">15 帧 · 深度标准差约 1.88 米</output></div></div>
   <article class="rally-bound"><h3>整回合的局部下界</h3><p>正式计算保留阻力，让各段初始状态、阻力系数和击球时刻组成参数 θ。只堆叠能看见球的帧，得到像素观测 <i>y = h(θ) + ε</i>，高斯噪声协方差为 Ω。像素对参数的敏感度记为 <i>H = ∂h/∂θ</i>，三维轨迹对参数的敏感度记为 <i>G = ∂X/∂θ</i>。</p>
     <p class="math-line">I<sub>obs</sub> = Hᵀ Ω⁻¹ H <span class="math-gap"> </span> Cov(X̂) ⪰ G I<sup>†</sup> Gᵀ</p>
-    <p>前式是像素提供的 Fisher 信息，后式把可用信息 <i>I</i> 映射为轨迹协方差的下界，† 表示伪逆。若某个参数变化完全不改变像素，却会改变目标位置，仅靠这些像素就无法估出该方向。推导针对局部无偏估计的可估方向；论文的数值计算另计入阻力先验。带学习先验的估计器可能低于这项局部基准。<a href="#bound-results">对照逐回合实测值</a></p></article>
+    <p>H 的每一列回答同一个问题：轻微改变某个飞行参数，观测到的像素会移动多少？像素移动越小，或噪声越大，参数就越难估准。前式给出观测信息，后式用 G 把参数不确定性传到三维轨迹。† 表示伪逆，只在目标可估的方向上使用。</p>
+    <div class="proof-lines"><div>B = √[(1/M) Σₜ tr(Gₜ I<sup>†</sup> Gₜᵀ)]</div></div>
+    <p>Gₜ 只取目标帧 t 的三维位置。对该帧的协方差取迹，就把三个坐标的方差相加。对 M 个目标帧取平均再开方，得到以米计的回合 RMS 下界 B。论文按回合比较 RMSE/B。经典界要求局部无偏和模型匹配，数值评估另计入阻力先验。使用图像和学习先验的估计器可以低于这项局部基准。<a href="#bound-results">对照逐回合实测值</a></p></article>
   <details class="network theory-details"><summary>从观测似然到轨迹误差界 <span>推导细节与标定假设</span></summary>
     <p>在选定的击球事件结构附近作局部线性化。若 Ω 已知且与参数无关，高斯对数似然为常数减去 ½(y − h)ᵀΩ⁻¹(y − h)。对 θ 求导得到得分向量 HᵀΩ⁻¹(y − h)，对其外积取期望便得到 I<sub>obs</sub>。渲染实验还加入模拟器中共享阻力系数的先验信息，击球时刻作为未知量。</p>
     <p>对于每个信息为零的参数方向 a，只有当 Ga = 0，目标轨迹的这个估计问题才不受该方向影响。将信息伪逆映射到可估目标的三维位置，取协方差迹可得到平方距离的界，按目标帧汇总并开方即可与轨迹 RMSE 对照。</p>
