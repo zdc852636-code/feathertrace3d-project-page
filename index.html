@@ -103,32 +103,31 @@
   <p class="intro">我们先问哪些三维轨迹会产生完全相同的像素，再问即使飞行模型正确，带噪声的像素允许把深度估到多准。</p>
 
   <div class="derivation">
-    <article><h3>为什么重力能固定尺度？</h3><p>把相机坐标写成 (X, Y, Z)。针孔投影只保留 X/Z 和 Y/Z，因此把三个坐标同时乘以正数 s，每一帧的像素都相同。设相机中心 C 固定，时间戳和重力已知，将原轨迹改为 pₛ = C + s(p − C)，则 vₛ = sv，加速度也随之乘以 s。</p>
-      <div class="proof-lines" aria-label="从两条轨迹分别计算缩放后的加速度"><div>原轨迹缩放：aₛ = s(g − k‖v‖v)</div><div>缩放后仍须满足：aₛ = g − kₛs²‖v‖v</div></div>
-      <p>k 和 kₛ 分别是两条轨迹的二次阻力系数。令上面两式相等，移项得到</p>
-      <p class="math-line" aria-label="s 减一乘重力向量，等于 s k 减 s 的平方 k 下标 s，乘速度大小和速度向量">(s − 1)<b>g</b> = (sk − s²k<sub>s</sub>)‖<b>v</b>‖<b>v</b></p>
-      <p>左边竖直，右边沿速度方向。只要飞行中有一个时刻速度含水平分量，等式就迫使 <i>s = 1</i>。这排除了整体缩放；未知击球时刻、短段或长时间漏检仍会使某些深度难以确定。</p></article>
-    <article><h3>为什么时长的指数是 −5/2？</h3><p>暂时忽略阻力并把深度 z 视作近似恒定。取像面向上为正，把重力引起的位移 −g<sub>⊥</sub>t²/2 乘以 f/z，便得到像素位移。像素轨迹近似为 u(t) = a + bt + ct²，其中 c = −fg<sub>⊥</sub>/(2z)。轨迹越远，画面中能测到的弯曲就越小。</p>
-      <p>在时长 T 内均匀采 N 帧，设像素噪声独立、标准差为 σ。由观测估计二次项系数 c，再用 z = −fg<sub>⊥</sub>/(2c) 将曲率换算成深度。</p>
-      <details class="network theory-details"><summary>系数 180 从哪里来？</summary>
-        <p>把时间居中为 τᵢ = tᵢ/T − ½。对于对称均匀采样，去除常数项和线性项后，τᵢ² 剩下 qᵢ = τᵢ² − mean(τ²)。在连续均匀近似下，均值为 1/12，而 (τ² − 1/12)² 在 [−½, ½] 上的积分为 1/180。</p>
-        <div class="proof-lines"><div>Var(ĉ) = σ² / Σᵢ[T²qᵢ]² ≈ 180σ²/(NT⁴)</div><div>|dz/dc| = 2z²/(fg<sub>⊥</sub>)</div></div>
-        <p>把第一行的方差开方，再乘以第二行的灵敏度，就得到下面的系数 2√180 ≈ 26.8。</p>
-      </details>
-      <p class="math-line" aria-label="深度标准差约等于二十六点八乘像素标准差乘深度平方，除以焦距、横向重力分量、帧数平方根和时长平方的乘积">σ<sub>z</sub> ≈ <span class="fraction"><span>26.8 σ z²</span><span>f g<sub>⊥</sub> √N T²</span></span></p>
-      <p><i>f</i> 是以像素计的焦距，<i>g<sub>⊥</sub></i> 是垂直于视线的重力分量。时长翻倍时，二次位移放大 4 倍。固定帧率还让样本数翻倍，独立噪声的平均效果再改善 √2 倍，所以标准差缩小到 1/(4√2)。</p></article>
+    <article><h3>重力怎样固定尺度？</h3><p>整条轨迹沿视线缩放 s 倍，像素仍重合。相机中心、重力和时间戳固定时，将两条飞行方程相减，再与速度做叉积，沿速度方向的阻力项就消去了。只要球曾横向飞行，就有</p>
+      <div class="summary-formula" role="math" aria-label="s 减一乘以重力和速度的叉积等于零，推出 s 等于一">(s − 1)(<b>g</b> × <b>v</b>) = 0 &nbsp;⇒&nbsp; s = 1</div></article>
+    <article><h3>为什么看得越久，深度越准？</h3><p>忽略阻力、深度近似恒定时，重力造成的像素弯曲随时长 T 的平方增长。均匀采样且像素噪声独立时，多看 N 帧还带来 √N 的收益。固定帧率下 N 与 T 成正比。</p>
+      <div class="summary-formula" role="math" aria-label="深度标准差正比于一除以根号 N 乘时长平方，固定帧率时正比于时长的负二分之五次方">σ<sub>z</sub> ∝ 1/(√N T²) ∝ T<sup>−5/2</sup></div></article>
   </div>
   <div class="flight-demo"><div><b>改变可见飞行时长</b><p>固定 30 帧/秒、深度 20 米、焦距 1,313 像素、像素噪声 2 像素、横向重力约 9 米/秒²。这里单独演示无阻力近似。</p></div><div><div class="tabs" id="flightTimes" role="group" aria-label="可见飞行时长"><button type="button" data-duration="0.5" aria-pressed="true">0.5 秒</button><button type="button" data-duration="1" aria-pressed="false">1 秒</button><button type="button" data-duration="1.5" aria-pressed="false">1.5 秒</button></div><output id="flightPrecision" aria-live="polite">15 帧 · 深度标准差约 1.88 米</output></div></div>
-  <article class="rally-bound"><h3>整回合的局部下界</h3><p>正式计算保留阻力，让各段初始状态、阻力系数和击球时刻组成参数 θ。只堆叠能看见球的帧，得到像素观测 <i>y = h(θ) + ε</i>，高斯噪声协方差为 Ω。像素对参数的敏感度记为 <i>H = ∂h/∂θ</i>，三维轨迹对参数的敏感度记为 <i>G = ∂X/∂θ</i>。</p>
-    <p class="math-line">I<sub>obs</sub> = Hᵀ Ω⁻¹ H <span class="math-gap"> </span> Cov(X̂) ⪰ G I<sup>†</sup> Gᵀ</p>
-    <p>H 的每一列回答同一个问题：轻微改变某个飞行参数，观测到的像素会移动多少？像素移动越小，或噪声越大，参数就越难估准。前式给出观测信息，后式用 G 把参数不确定性传到三维轨迹。† 表示伪逆，只在目标可估的方向上使用。</p>
-    <div class="proof-lines"><div>B = √[(1/M) Σₜ tr(Gₜ I<sup>†</sup> Gₜᵀ)]</div></div>
-    <p>Gₜ 只取目标帧 t 的三维位置。对该帧的协方差取迹，就把三个坐标的方差相加。对 M 个目标帧取平均再开方，得到以米计的回合 RMS 下界 B。论文按回合比较 RMSE/B。经典界要求局部无偏和模型匹配，数值评估另计入阻力先验。使用图像和学习先验的估计器可以低于这项局部基准。<a href="#bound-results">对照逐回合实测值</a></p></article>
-  <details class="network theory-details"><summary>从观测似然到轨迹误差界 <span>推导细节与标定假设</span></summary>
-    <p>在选定的击球事件结构附近作局部线性化。若 Ω 已知且与参数无关，高斯对数似然为常数减去 ½(y − h)ᵀΩ⁻¹(y − h)。对 θ 求导得到得分向量 HᵀΩ⁻¹(y − h)，对其外积取期望便得到 I<sub>obs</sub>。渲染实验还加入模拟器中共享阻力系数的先验信息，击球时刻作为未知量。</p>
-    <p>对于每个信息为零的参数方向 a，只有当 Ga = 0，目标轨迹的这个估计问题才不受该方向影响。将信息伪逆映射到可估目标的三维位置，取协方差迹可得到平方距离的界，按目标帧汇总并开方即可与轨迹 RMSE 对照。</p>
-    <p>如果标定 γ 也需从数据估计，在标定信息块可逆时，有效信息为 I<sub>θθ</sub> − I<sub>θγ</sub>I<sub>γγ</sub>⁻¹I<sub>γθ</sub>。减去的项半正定，说明标定不确定性会减少或保持可用信息。</p>
-  </details>
+  <article class="rally-bound" id="rally-bound"><h3>整回合的局部下界</h3>
+    <p>同样是 30 厘米误差，放在清晰长飞行和大段漏检的回合里，含义可能很不一样。我们用每个回合自己的相机、可见帧和像素噪声，算出一把以米计的尺子。</p>
+    <ol class="bound-steps">
+      <li><div><h4>写出可见帧的观测</h4><p>θ 包含各段飞行状态、共享阻力和击球时刻。在给定击球事件结构附近，用含阻力的动力学得到位置 pₜ，再投影到相机。只把可见帧集合 V 中的球点堆叠成 y。</p></div>
+        <div class="bound-formulas"><div>hₜ(θ) = π<sub>γₜ</sub>(pₜ(θ))</div><div>y = h(θ) + ε， ε ∼ 𝒩(0, Ω)</div></div></li>
+      <li><div><h4>从像素变化算出观测信息</h4><p>H 的每一列表示一个参数微调后，可见球点会移动多少。在已知且与 θ 无关的噪声协方差 Ω 下，高斯似然的梯度 s 描述数据对参数的敏感度。对梯度外积取期望，得到 Fisher 信息。</p></div>
+        <div class="bound-formulas"><div>Hₜ = (∂π<sub>γₜ</sub>/∂pₜ)(∂pₜ/∂θ)， t ∈ V</div><div>s = ∇<sub>θ</sub> log L = Hᵀ Ω⁻¹(y − h)</div><div>I<sub>obs</sub> = 𝔼[ssᵀ] = Hᵀ Ω⁻¹ H</div></div></li>
+      <li><div><h4>把信息量换成三维位置的不确定性</h4><p>Gₜ 描述同一组参数变化会让目标帧的三维位置移动多少。若有某个方向能移动球、却完全不改变像素，观测无法给该方向提供有限精度界。对可估目标，局部无偏估计满足协方差下界。</p></div>
+        <div class="bound-formulas"><div>Gₜ = ∂pₜ/∂θ</div><div>ker(I<sub>obs</sub>) ⊆ ker(Gₜ)</div><div>Cov(p̂ₜ) ⪰ Gₜ I<sub>obs</sub><sup>†</sup> Gₜᵀ</div></div></li>
+      <li><div><h4>汇总为每回合一个米制下界</h4><p>对每帧的位置协方差下界取迹，相当于把三个坐标方向的方差相加。对 M 个目标帧取平均再开方，得到 B。实测误差也用同一组目标帧算 RMSE，然后逐回合相除。</p></div>
+        <div class="bound-formulas">
+          <math display="block" aria-label="B 等于目标帧三维协方差下界的迹的平均值开平方"><mi>B</mi><mo>=</mo><msqrt><mrow><mfrac><mn>1</mn><mi>M</mi></mfrac><msub><mo>∑</mo><mi>t</mi></msub><mi mathvariant="normal">tr</mi><mo>(</mo><msub><mi>G</mi><mi>t</mi></msub><msup><mi>I</mi><mo>†</mo></msup><msubsup><mi>G</mi><mi>t</mi><mi mathvariant="normal">T</mi></msubsup><mo>)</mo></mrow></msqrt></math>
+          <div>回合误差比 = RMSE / B</div>
+        </div></li>
+    </ol>
+    <p>† 表示伪逆。仅使用像素时，最后一步取 I = I<sub>obs</sub>。渲染实验还计入模拟器共享阻力系数的先验信息。实拍则在拟合轨迹处代入估算。这个比值衡量实测误差离该回合的局部参照有多远，使用图像和学习先验的模型也可能低于该参照。<a href="#bound-results">对照逐回合实测值</a></p>
+    <details class="network theory-details"><summary>如果相机标定也有误差</summary><p>把相机参数 γ 与飞行参数 θ 联合估计。若标定信息块可逆，消去 γ 后的有效信息为</p>
+      <div class="bound-formulas"><div>I<sub>θ|γ</sub> = I<sub>θθ</sub> − I<sub>θγ</sub> I<sub>γγ</sub><sup>−1</sup> I<sub>γθ</sub></div></div><p>减去的项为半正定矩阵。因此相机参数越难确定，仅凭球点可利用的轨迹信息至多维持原值。论文的渲染下界把给定相机视为准确。</p></details>
+  </article>
 </details>
       <article class="bound-results" id="bound-results"><h4>逐回合估计误差离下界有多远？</h4>
     <div class="table-scroll"><table><caption>前两列数值分别是各回合 RMS 下界和实测 RMSE 的均值。最后一列先逐回合相除，再取中位数。</caption><thead><tr><th>场景</th><th>RMS 下界（米）</th><th>实测 RMSE（米）</th><th>逐回合比值中位数</th></tr></thead><tbody>

@@ -171,6 +171,17 @@ th:first-child,td:first-child{text-align:left}
 .flight-demo{display:grid;grid-template-columns:1.35fr 1fr;gap:30px;align-items:center;margin-block:22px 28px;border:1px solid var(--line);border-radius:8px;padding:16px 20px}
 .flight-demo .tabs{margin:0 0 4px}.flight-demo output{font-size:16px;color:var(--jade);font-weight:650;font-variant-numeric:tabular-nums}
 .rally-bound{max-width:900px;margin-inline:auto}
+.summary-formula,.bound-formulas{color:var(--ink);font:18px/1.5 "Cambria Math",Georgia,serif;font-variant-numeric:lining-nums}
+.summary-formula{background:var(--wash);padding:10px 12px;margin-top:10px;text-align:center}
+.summary-formula sup,.summary-formula sub,.bound-formulas sup,.bound-formulas sub{font-size:.72em}
+.bound-steps{margin:18px 0 12px;padding:0;counter-reset:bound}
+.bound-steps>li{counter-increment:bound;position:relative;list-style:none;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;gap:20px;border-top:1px solid var(--line);padding:15px 0 15px 31px}
+.bound-steps>li::before{content:counter(bound);position:absolute;left:0;top:16px;color:var(--jade);font:italic 19px var(--serif)}
+.bound-steps h4{margin:0 0 3px;font-size:16px}
+.bound-steps p{margin:0;color:var(--muted);font-size:15px;line-height:1.7}
+.bound-formulas{display:grid;gap:4px;padding:10px 14px;border-left:2px solid #a5beaf;background:var(--wash);overflow-wrap:anywhere}
+.bound-formulas math{justify-self:start;max-width:100%;font-size:1.05em}
+@media(max-width:700px){.bound-steps>li{grid-template-columns:minmax(0,1fr);gap:8px;padding-left:25px}.bound-formulas{font-size:16px;padding:8px 10px}}
 .compute-ledger{margin-top:26px;padding:20px 0 0;border-top:1px solid var(--line)}
 .compute-ledger>h3{margin:0 0 14px;font-size:20px}
 .compute-ledger dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0;gap:24px}
