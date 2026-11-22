@@ -21,6 +21,7 @@ button{cursor:pointer}
 .skip{position:fixed;z-index:10;left:10px;top:-65px;background:#fff;padding:9px}
 .skip:focus{top:8px}
 .nav{position:sticky;top:0;z-index:5;border-bottom:1px solid #e5eae6;background:#fffffff5;backdrop-filter:blur(12px)}
+.nav::after{content:"";position:absolute;inset:auto 0 -1px;height:2px;background:var(--jade);transform:scaleX(var(--read-progress,0));transform-origin:left;pointer-events:none}
 .nav-inner,.nav nav,.brand,.actions,.pill,.visual-label,.controls,.replay-detail,.case-gallery,.dialog-bar,.resources,footer .wrap{display:flex;align-items:center}
 .nav-inner{min-height:52px;justify-content:space-between;gap:18px}
 .brand{gap:8px;color:var(--ink);font-weight:700;letter-spacing:-.035em;text-decoration:none}
@@ -115,6 +116,11 @@ button{cursor:pointer}
 .metrics-grid dt{font-weight:650;font-size:14px}
 .metrics-grid dd{font:500 clamp(34px,3.2vw,54px)/1.2 var(--serif);letter-spacing:-.045em;color:#235643}
 .metrics-grid dd small{font:500 .47em var(--serif)}
+.stat-number{display:inline-block;position:relative;font-variant-numeric:lining-nums tabular-nums}
+.stat-ticker{display:none}
+.study-grid td[data-meter]{position:relative}
+.study-grid td[data-meter]::after{content:"";position:absolute;right:5px;bottom:3px;width:min(55px,calc(100% - 10px));height:3px;border-radius:2px;background:linear-gradient(to right,#9eb6aa var(--extent),#e4eae3 var(--extent));transform-origin:left}
+.study-grid .accentrow td[data-meter]::after{background:linear-gradient(to right,var(--jade) var(--extent),#d7e5da var(--extent))}
 .metrics-grid>div>div{font-size:13px;color:var(--muted)}
 .result-grid,.progress-grid,.limits-grid{margin-top:32px}
 .chart-card,.ablation{min-width:0}
@@ -265,7 +271,14 @@ footer b{color:var(--ink)}footer a{margin-left:auto;text-decoration:none}
 .studies .bound-results{padding-top:14px}
 .results-chart{display:block;max-width:860px;margin-inline:auto}
 @keyframes enter-paper{from{opacity:.25;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes trace-meter{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes trace-bar{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0)}}
 @media screen and (prefers-reduced-motion:no-preference){
+  .stat-number.counting{color:transparent}
+  .stat-ticker{display:block;position:absolute;inset:0;color:#235643;text-align:right;pointer-events:none}
+  .stat-ticker::after{content:attr(data-reading)}
+  table.tracing td[data-meter]::after{animation:trace-meter .6s cubic-bezier(.22,.61,.36,1) both}
+  #bars.tracing .fill{animation:trace-bar .64s cubic-bezier(.22,.61,.36,1) both}
   .masthead h1,.masthead .paper-title{animation:enter-paper .35s ease-out both}
   .masthead .paper-title{animation-delay:50ms}
   #overviewDialog[open]{animation:enter-paper .18s ease-out}

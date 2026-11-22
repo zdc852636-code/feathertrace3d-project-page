@@ -196,13 +196,91 @@
     const box=overview.getBoundingClientRect();
     if(event.clientX<box.left||event.clientY<box.top||event.clientX>box.right||event.clientY>box.bottom)overview.close();
   });
+  function countResults(group){
+    const counters=Array.from(group.querySelectorAll(".stat-number"),node=>{
+      const label=node.textContent.trim();
+      const ticker=document.createElement("span");
+      const decimals=(label.split(".")[1]||"").length;
+      ticker.className="stat-ticker";
+      ticker.setAttribute("aria-hidden","true");
+      ticker.dataset.reading=(0).toFixed(decimals);
+      node.append(ticker);
+      node.classList.add("counting");
+      return {node,ticker,decimals,value:Number(label)};
+    });
+    const start=performance.now();
+    let frameId;
+    function finish(){
+      cancelAnimationFrame(frameId);
+      counters.forEach(({node,ticker})=>{
+        node.classList.remove("counting");
+        ticker.remove();
+      });
+    }
+    function advance(now){
+      const progress=bounds((now-start)/720,0,1);
+      if(progress===1){finish();return;}
+      const eased=1-(1-progress)**2;
+      counters.forEach(({ticker,decimals,value})=>{
+        ticker.dataset.reading=(value*eased).toFixed(decimals);
+      });
+      frameId=requestAnimationFrame(advance);
+    }
+    frameId=requestAnimationFrame(advance);
+    return finish;
+  }
+  function setupScrollFigures(){
+    const tables=document.querySelectorAll("#neural .ablation table,#physical .evidence table");
+    tables.forEach(table=>{
+      const cells=Array.from(table.querySelectorAll("tbody td:not(:first-child)"));
+      const values=cells.map(cell=>parseFloat(cell.textContent));
+      const maximum=Math.max(...values);
+      if(!(maximum>0))return;
+      cells.forEach((cell,i)=>{
+        cell.dataset.meter="";
+        cell.style.setProperty("--extent",(100*values[i]/maximum)+"%");
+      });
+    });
+    if(!("IntersectionObserver" in window))return;
+    const metrics=document.querySelector(".metrics-grid");
+    const initialAnchor=byId(location.hash.slice(1));
+    const seen=new WeakSet();
+    let finishCounting;
+    function settle(target){
+      if(target===metrics && finishCounting){finishCounting();finishCounting=null;}
+      target.classList.remove("tracing");
+      figures.unobserve(target);
+    }
+    const figures=new IntersectionObserver(entries=>{
+      for(const entry of entries){
+        const target=entry.target;
+        if(!entry.isIntersecting && seen.has(target)){settle(target);continue;}
+        if(entry.intersectionRatio<.2 || seen.has(target))continue;
+        seen.add(target);
+        if(reducedMotion.matches || initialAnchor?.contains(target)){settle(target);continue;}
+        if(target===metrics)finishCounting=countResults(target);
+        else target.classList.add("tracing");
+      }
+    },{threshold:[0,.2]});
+    const targets=[...tables,metrics,byId("bars")];
+    targets.forEach(target=>figures.observe(target));
+    function settleVisible(){
+      targets.filter(target=>seen.has(target)).forEach(settle);
+    }
+    reducedMotion.addEventListener("change",event=>{if(event.matches)settleVisible();});
+    document.addEventListener("visibilitychange",()=>{if(document.hidden)settleVisible();});
+    window.addEventListener("beforeprint",settleVisible);
+  }
   const observer=new ResizeObserver(refresh);observer.observe(scene);
+  const navigation=document.querySelector(".nav");
   const navLinks=Array.from(document.querySelectorAll(".nav nav a"));
   const sections=navLinks.map(link=>document.querySelector(link.hash));
   let activeSection=-1, navigationFrame=0;
   function updateNavigation(){
     navigationFrame=0;
-    const nearBottom=window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2;
+    const scrollRange=document.documentElement.scrollHeight-window.innerHeight;
+    const nearBottom=window.scrollY>=scrollRange-2;
+    navigation.style.setProperty("--read-progress",scrollRange>0?bounds(window.scrollY/scrollRange,0,1):0);
     let current=sections.length-1;
     while(!nearBottom && current>=0 && sections[current].getBoundingClientRect().top>80)current--;
     if(current===activeSection)return;
@@ -219,4 +297,5 @@
   window.addEventListener("resize",scheduleNavigation);
   updateNavigation();
   selectCase(first);chart("real");refresh();
+  setupScrollFigures();
 })();

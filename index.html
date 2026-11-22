@@ -126,7 +126,11 @@
 </section>
 <section class="wrap section" id="results">
   <p class="kicker">EXPERIMENTS</p><h2>精度提升来自哪一步？</h2>
-  <dl class="metrics-grid"><div><dt>实拍 · 平均参考偏差</dt><dd>0.398 <small>m</small></dd><div>15 段实拍，1,600 个配对帧</div></div><div><dt>渲染 · 平均三维误差</dt><dd>0.498 <small>m</small></dd><div>56 个回合，各回合等权</div></div><div><dt>实拍 · 物理拟合后改善</dt><dd>15 <small>/ 15 段</small></dd><div>与同一片段的稳定后神经预测比较</div></div></dl>
+  <dl class="metrics-grid">
+    <div><dt>实拍 · 平均参考偏差</dt><dd><span class="stat-number">0.398</span> <small>m</small></dd><div>15 段实拍，1,600 个配对帧</div></div>
+    <div><dt>渲染 · 平均三维误差</dt><dd><span class="stat-number">0.498</span> <small>m</small></dd><div>56 个回合，各回合等权</div></div>
+    <div><dt>实拍 · 物理拟合后改善</dt><dd><span class="stat-number">15</span> <small>/ 15 段</small></dd><div>与同一片段的稳定后神经预测比较</div></div>
+  </dl>
   <div class="result-grid results-chart"><article class="chart-card">
     <h3>单独使用网络或物理模型，会怎样？</h3>
     <div class="tabs" id="metricTabs" role="group" aria-label="指标数据集"><button type="button" data-set="real" aria-pressed="true">真实录像</button><button type="button" data-set="all" aria-pressed="false">全部渲染</button><button type="button" data-set="matched" aria-pressed="false">模型匹配</button><button type="button" data-set="mismatch" aria-pressed="false">模型失配</button></div>
