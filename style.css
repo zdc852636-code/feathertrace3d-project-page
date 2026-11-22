@@ -17,7 +17,7 @@ button,input,select{font:inherit}
 a{color:var(--jade);text-underline-offset:.22em}
 button{cursor:pointer}
 :focus-visible{outline:3px solid #a85b23;outline-offset:4px}
-.wrap{width:min(1160px,91%);margin-inline:auto}
+.wrap{width:min(1080px,91%);margin-inline:auto}
 .skip{position:fixed;z-index:10;left:10px;top:-65px;background:#fff;padding:9px}
 .skip:focus{top:8px}
 .nav{position:sticky;top:0;z-index:5;border-bottom:1px solid #e5eae6;background:#fffffff5;backdrop-filter:blur(12px)}
@@ -26,7 +26,10 @@ button{cursor:pointer}
 .brand{gap:8px;color:var(--ink);font-weight:700;letter-spacing:-.035em;text-decoration:none}
 .brand img{width:25px;height:25px}
 .nav nav{gap:26px;white-space:nowrap}
-.nav nav a{color:#3b5048;font-size:14px;text-decoration:none}
+.nav nav a{position:relative;color:#3b5048;font-size:14px;text-decoration:none;padding-block:5px}
+.nav nav a::after{content:"";position:absolute;inset:auto 0 0;height:2px;border-radius:2px;background:var(--jade);transform:scaleX(0);transform-origin:left}
+.nav nav a[aria-current="location"]{color:var(--jade)}
+.nav nav a[aria-current="location"]::after{transform:scaleX(1)}
 .nav nav a:hover,footer a:hover{color:var(--jade);text-decoration:underline}
 .masthead{text-align:center;padding-block:clamp(28px,3.2vw,52px) clamp(24px,2.7vw,43px)}
 .masthead h1{font-family:Inter,"Segoe UI",sans-serif;font-size:clamp(52px,6.3vw,94px);font-weight:630;line-height:1.06;letter-spacing:-.075em}
@@ -78,15 +81,15 @@ button{cursor:pointer}
 .figure-note,.overview-figure figcaption{font-size:14px;line-height:1.75;color:var(--muted)}
 .figure-note{max-width:870px;margin:13px auto 0;text-align:center;text-wrap:pretty}
 .figure-note a,.overview-figure figcaption a{white-space:nowrap;margin-left:.35em}
-.section{padding-block:clamp(46px,5vw,76px)}
+.section{padding-block:clamp(40px,4.3vw,64px)}
 .kicker{font:650 12px/1.4 Inter,"Segoe UI",sans-serif;letter-spacing:.16em;color:var(--jade);margin-bottom:10px}
-.section h2{font-size:clamp(27px,2.8vw,43px);letter-spacing:-.045em;line-height:1.26;text-wrap:balance}
+.section h2{font-size:clamp(26px,2.65vw,40px);letter-spacing:-.045em;line-height:1.26;text-wrap:balance}
 .section h3{font-size:clamp(18px,1.45vw,23px);line-height:1.45;letter-spacing:-.02em}
 .intro,.method-notes p,.ablation p,.takeaway p,.limits-grid p,.finding{color:var(--muted);line-height:1.9}
 .intro{max-width:57em;margin:13px 0 24px}
 .method-band{background:#f5f7f4;border-block:1px solid #e6ece6}
 .section-title{text-align:center}
-.section-title h2{font:500 clamp(40px,4.2vw,66px)/1 var(--serif);letter-spacing:-.05em}
+.section-title h2{font:500 clamp(38px,3.9vw,60px)/1 var(--serif);letter-spacing:-.05em}
 .section-title .intro{max-width:53em;margin:14px auto 25px;text-wrap:pretty}
 .overview-figure{width:100%}
 .figure-button{position:relative;border:1px solid #cbd9cf;border-radius:8px;background:#fff;padding:clamp(8px,1vw,16px);width:100%;display:block;cursor:zoom-in}
@@ -124,7 +127,7 @@ button{cursor:pointer}
 .bar-row{display:grid;grid-template-columns:104px 1fr 55px;gap:12px;align-items:center;margin:14px 0;font-size:14px}
 .bar-row b{font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
 .track{height:9px;background:#eff3ee;border-radius:4px}
-.fill{height:100%;background:#8aa89b;border-radius:4px}
+.fill{height:100%;background:#8aa89b;border-radius:4px;transform-origin:left}
 .focus{font-weight:700;color:#1c664c}.focus .fill{background:#227354}
 .chart-card .caption,.ablation .caption{margin-top:15px;font-size:14px}
 table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums;text-align:right}
@@ -230,8 +233,8 @@ footer b{color:var(--ink)}footer a{margin-left:auto;text-decoration:none}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 @media print{.nav,.actions,.controls,.case-gallery,.resources,footer,.dialog-bar{display:none}.masthead,.section{padding-block:20px}.wrap{width:96%}.viewer,.overview-figure,table{break-inside:avoid}*{print-color-adjust:exact}}
 
-.masthead{padding-block:clamp(38px,5vw,72px) clamp(24px,3vw,42px)}
-.masthead h1{font-size:clamp(54px,7vw,105px)}
+.masthead{padding-block:clamp(30px,3.9vw,57px) clamp(20px,2.4vw,34px)}
+.masthead h1{font-size:clamp(49px,6.25vw,94px)}
 .paper-title{max-width:1000px}
 #question .intro{max-width:65ch;text-wrap:pretty}
 .method-band{background:linear-gradient(135deg,#edf4ef,#f8faf6 66%)}
@@ -239,8 +242,8 @@ footer b{color:var(--ink)}footer a{margin-left:auto;text-decoration:none}
 .contrib-index a{font-size:15px;text-decoration:none;border-bottom:1px solid #8aab99;padding-bottom:3px}
 .contrib-index a:hover{text-decoration:underline}
 .studies{margin:0}
-.studies>li{display:block;border-top:1px solid #c7d6cb;padding:clamp(25px,4vw,48px) 0}
-.studies>li::before{top:clamp(25px,4vw,48px);font:italic 28px/1.3 var(--serif);color:#49765f}
+.studies>li{--study-space:clamp(22px,3.4vw,41px);display:block;border-top:1px solid #c7d6cb;padding:var(--study-space) 0}
+.studies>li::before{top:var(--study-space);font:italic 28px/1.3 var(--serif);color:#49765f}
 .studies>li>h3{padding-left:50px;font-size:clamp(22px,2.1vw,32px);line-height:1.3}
 .studies>li>h3 span{font-size:clamp(16px,1.4vw,21px);letter-spacing:0}
 .studies>li>p.lead{margin:15px 0 22px;max-width:58em;color:#283e35;font-size:clamp(16px,1.35vw,19px);line-height:1.85}
@@ -261,4 +264,14 @@ footer b{color:var(--ink)}footer a{margin-left:auto;text-decoration:none}
 .studies .contribution-proof{padding:12px 0}
 .studies .bound-results{padding-top:14px}
 .results-chart{display:block;max-width:860px;margin-inline:auto}
+@keyframes enter-paper{from{opacity:.25;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media screen and (prefers-reduced-motion:no-preference){
+  .masthead h1,.masthead .paper-title{animation:enter-paper .35s ease-out both}
+  .masthead .paper-title{animation-delay:50ms}
+  #overviewDialog[open]{animation:enter-paper .18s ease-out}
+  .nav nav a::after{transition:transform .2s ease-out}
+  .fill{transition:transform .34s cubic-bezier(.22,.7,.24,1)}
+  .case-gallery button,.controls button,.tabs button{transition:background-color .16s,border-color .16s,box-shadow .16s,transform .16s}
+  .case-gallery button:active,.controls button:active,.tabs button:active{transform:translateY(1px)}
+}
 @media(max-width:760px){.study-grid{grid-template-columns:minmax(0,1fr)}.studies>li>h3{padding-left:39px}.contrib-index{margin-bottom:15px}.study-grid .ablation,.study-grid .evidence{padding:14px}.equation>div{font-size:17px}.studies>li>p.lead{margin-bottom:16px}}

@@ -5,6 +5,8 @@
   const first = "case07_A4";
   const scene = byId("scene"), screen = byId("overlay");
   const video = byId("video"), slider = byId("seek"), play = byId("play");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let cameraAnimation = 0;
   let sample, frame = 0, yaw = -.64, elevation = .52, side = false;
   let sourceVersion = 0, dragging = null, clock = null, pendingPlay = false;
   const corners = [[-3.05,-6.70,0],[3.05,-6.70,0],[3.05,6.70,0],[-3.05,6.70,0]];
@@ -105,8 +107,25 @@
   video.addEventListener("seeked",()=>{update(Math.round(video.currentTime*sample.fps));requestFrames();});
   video.addEventListener("timeupdate",()=>{if(!video.requestVideoFrameCallback || video.paused)update(Math.round(video.currentTime*sample.fps));});
   slider.addEventListener("input",()=>{pendingPlay=false;video.pause();frame=Number(slider.value);if(video.readyState>0)video.currentTime=frame/sample.fps;update(frame);});
-  byId("view").addEventListener("click",()=>{side=!side;yaw=side?0:-.64;elevation=side?.08:.52;byId("view").textContent=side?"恢复斜视":"切换到侧视";update(frame);});
-  scene.addEventListener("pointerdown",e=>{dragging=[e.clientX,e.clientY,yaw,elevation];scene.setPointerCapture(e.pointerId);});
+  byId("view").addEventListener("click",()=>{
+    cancelAnimationFrame(cameraAnimation);
+    side=!side;
+    byId("view").textContent=side?"恢复斜视":"切换到侧视";
+    const targetYaw=side?0:-.64, targetElevation=side?.08:.52;
+    const startYaw=yaw, startElevation=elevation, started=performance.now();
+    const angle=targetYaw-startYaw;
+    const turn=Math.atan2(Math.sin(angle),Math.cos(angle));
+    function turnCamera(now){
+      const fraction=reducedMotion.matches?1:bounds((now-started)/300,0,1);
+      const eased=1-(1-fraction)**3;
+      yaw=startYaw+turn*eased;
+      elevation=startElevation+(targetElevation-startElevation)*eased;
+      court(scene,sample,frame,yaw,elevation);
+      if(fraction<1)cameraAnimation=requestAnimationFrame(turnCamera);
+    }
+    turnCamera(started);
+  });
+  scene.addEventListener("pointerdown",e=>{cancelAnimationFrame(cameraAnimation);dragging=[e.clientX,e.clientY,yaw,elevation];scene.setPointerCapture(e.pointerId);});
   scene.addEventListener("pointermove",e=>{if(!dragging)return;yaw=dragging[2]+(e.clientX-dragging[0])*.009;elevation=bounds(dragging[3]-(e.clientY-dragging[1])*.008,.05,1.45);update(frame);});
   scene.addEventListener("lostpointercapture",()=>dragging=null);
   const rows=[
@@ -122,14 +141,21 @@
     matched:[1,"平均三维位置误差（米）","28 个回合的标定与飞行模型都与拟合器假设匹配。"],
     mismatch:[2,"平均三维位置误差（米）","另 28 个回合扰动了标定，部分回合还改变了阻力、曝光和击球时的可见性。"]
   };
+  const bars=[2,4,7,8].map(index=>{
+    const row=rows[index], node=document.createElement("div");
+    node.className="bar-row"+(index===8?" focus":"");
+    const name=document.createElement("span");name.textContent=row[0];
+    const track=document.createElement("div"), fill=document.createElement("div");
+    track.className="track";fill.className="fill";track.append(fill);
+    const value=document.createElement("b");
+    node.append(name,track,value);byId("bars").append(node);
+    return {row,fill,value};
+  });
   function chart(key){
     const [col,title,note]=split[key];byId("chartUnit").textContent=title+" · 越低越好";byId("chartNote").textContent=note;
-    const container=byId("bars");container.replaceChildren();
-    [2,4,7,8].forEach(i=>{
-      const row=rows[i], node=document.createElement("div");node.className="bar-row"+(i===8?" focus":"");
-      const name=document.createElement("span");name.textContent=row[0];
-      const track=document.createElement("div"), fill=document.createElement("div");track.className="track";fill.className="fill";fill.style.width=(row[col]/2*100)+"%";track.append(fill);
-      const value=document.createElement("b");value.textContent=row[col].toFixed(3);node.append(name,track,value);container.append(node);
+    bars.forEach(({row,fill,value})=>{
+      fill.style.transform="scaleX("+row[col]/2+")";
+      value.textContent=row[col].toFixed(3);
     });
     document.querySelectorAll("[data-set]").forEach(button=>button.setAttribute("aria-pressed",String(button.dataset.set===key)));
   }
@@ -171,5 +197,26 @@
     if(event.clientX<box.left||event.clientY<box.top||event.clientX>box.right||event.clientY>box.bottom)overview.close();
   });
   const observer=new ResizeObserver(refresh);observer.observe(scene);
+  const navLinks=Array.from(document.querySelectorAll(".nav nav a"));
+  const sections=navLinks.map(link=>document.querySelector(link.hash));
+  let activeSection=-1, navigationFrame=0;
+  function updateNavigation(){
+    navigationFrame=0;
+    const nearBottom=window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2;
+    let current=sections.length-1;
+    while(!nearBottom && current>=0 && sections[current].getBoundingClientRect().top>80)current--;
+    if(current===activeSection)return;
+    if(activeSection>=0)navLinks[activeSection].removeAttribute("aria-current");
+    if(current>=0)navLinks[current].setAttribute("aria-current","location");
+    activeSection=current;
+  }
+  function scheduleNavigation(){
+    if(!navigationFrame)navigationFrame=requestAnimationFrame(updateNavigation);
+  }
+  window.addEventListener("scroll",scheduleNavigation,{passive:true});
+  const layoutObserver=new ResizeObserver(scheduleNavigation);
+  layoutObserver.observe(document.body);
+  window.addEventListener("resize",scheduleNavigation);
+  updateNavigation();
   selectCase(first);chart("real");refresh();
 })();
