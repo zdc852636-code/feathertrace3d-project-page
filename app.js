@@ -5,6 +5,16 @@
   const first = "case07_A4";
   const scene = byId("scene"), screen = byId("overlay");
   const video = byId("video"), slider = byId("seek"), play = byId("play");
+  const film = byId("research-film"), filmPanel = byId("film-panel");
+  function openLinkedFilm(){
+    if(location.hash==="#research-film")filmPanel.open=true;
+  }
+  openLinkedFilm();
+  window.addEventListener("hashchange",openLinkedFilm);
+  document.querySelector('a[href="#research-film"]').addEventListener("click",()=>{filmPanel.open=true;});
+  filmPanel.addEventListener("toggle",()=>{if(!filmPanel.open)film.pause();});
+  film.addEventListener("play",()=>{pendingPlay=false;video.pause();});
+  video.addEventListener("play",()=>film.pause());
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   let cameraAnimation = 0;
   let sample, frame = 0, yaw = -.64, elevation = .52, side = false;

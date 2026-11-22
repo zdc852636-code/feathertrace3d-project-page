@@ -21,6 +21,7 @@
   <p class="premise">从一部手持手机的视频，重建羽毛球整回合的三维轨迹。</p>
   <div class="actions">
     <button class="pill paper-pending" type="button" disabled>论文 · arXiv 待上线</button>
+    <a class="pill" href="#research-film">观看研究视频 · 3:29</a>
     <a class="pill primary" href="#overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8v5H8z M3 16h7v5H3z M14 16h7v5h-7z M12 8v4 M6.5 16v-4h11v4"/></svg>方法总览</a>
   </div>
 </section>
@@ -39,6 +40,12 @@
     <button type="button" data-case="case20_A1" aria-pressed="false"><img src="assets/case20_A1.jpg" alt=""><span><b>Case 20</b><small>较高偏差样例</small></span></button>
   </div>
   <p class="figure-note">手机 A 是重建的唯一输入，画面中的圆圈标出检测球点。拖动右图可旋转球场。浅色点来自固定手机 B、C，只显示通过质量筛选且时间差不超过 10 毫秒的参考位置。<a href="assets/teaser.png" target="_blank" rel="noopener">论文首图</a></p>
+  <details class="research-film" id="film-panel"><summary>研究视频 <span>3 分 29 秒 · 英文旁白与字幕</span></summary>
+    <video id="research-film" aria-label="FeatherTrace3D 研究视频" controls playsinline preload="none" poster="assets/research-film-poster.jpg" width="1920" height="1080">
+      <source src="assets/feathertrace3d-v2.mp4" type="video/mp4">
+    </video>
+    <p>逐帧对照网络预测、物理修正与双目参考，再比较整回合误差与理论下界。<a href="assets/feathertrace3d-v2.mp4" download>下载 MP4</a></p>
+  </details>
 </section>
 
 <section class="wrap section paper-intro" id="question">

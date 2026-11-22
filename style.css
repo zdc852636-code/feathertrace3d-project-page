@@ -57,6 +57,11 @@ button{cursor:pointer}
 .frame{position:relative;aspect-ratio:16/9}
 .frame video,.frame canvas{width:100%;height:100%;display:block}
 .frame video{object-fit:contain}
+.research-film{border-block:1px solid var(--line);margin-top:16px}
+.research-film summary{padding:12px 0;cursor:pointer;color:var(--jade);font-weight:650}
+.research-film summary span{margin-left:.6em;font-size:.85em;color:var(--muted);font-weight:400}
+.research-film video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#113c42}
+.research-film p{margin:8px 0 14px;font-size:14px;color:var(--muted)}
 .frame #overlay{position:absolute;inset:0;pointer-events:none}
 .court canvas{cursor:grab;touch-action:none}
 .court canvas:active{cursor:grabbing}
