@@ -171,6 +171,10 @@
   <p class="intro">论文主表把完整管线与 TT4D 的神经输出比较。为检验网络本身的贡献，后续实验也把 TT4D 的输出送入同一个冻结的物理拟合器，并检验增加击球候选是否有帮助。</p>
   <div class="progress-grid"><div class="table-scroll"><table><thead><tr><th>相同物理拟合器</th><th>渲染误差</th><th>实拍参考偏差</th></tr></thead><tbody><tr><td>FeatherTrace3D · 论文 v6.5</td><td>0.498 m</td><td>0.398 m</td></tr><tr><td>FeatherTrace3D · 增加击球候选</td><td>0.475 m</td><td>0.410 m</td></tr><tr><td>TT4D ＋ 同一拟合器</td><td>0.467 m</td><td>0.393 m</td></tr></tbody></table><p class="caption">44 个开发回合选定规则。评估沿用 56 个渲染回合与 15 段实拍，其中渲染集此前参与过假设形成。</p></div>
   <div class="takeaway"><h3>物理拟合的收益最稳定</h3><p>增加候选击球时刻改善了渲染结果，实拍参考偏差略升。该变体与 TT4D 同拟合器的渲染配对差约 0.009 m，95% 区间为 −0.088 至 +0.109 m。现有对照尚不能确立网络间的优势。</p></div></div>
+<section aria-labelledby="paired-followup"><h3 id="paired-followup">11 月 23 日 · 同一物理拟合器的配对复验</h3>
+  <figure><img src="assets/paired-comparison.png" width="1519" height="608" loading="lazy" style="max-width:100%;height:auto" alt="左图逐段比较 15 段实拍的双目参考偏差；右图给出五种协议中两方法的配对差与 95% 区间。"><figcaption class="caption">右图按 FeatherTrace3D 减 TT4D 计算。两种网络共用物理拟合器，负值表示 FeatherTrace3D 的误差较小。</figcaption></figure>
+  <p>在预先固定的 24 个新仿真回合上，两种方法均使用准确标定与实际检测点，平均三维误差为 44.0 和 42.7 厘米；配对差为 +1.3 厘米，95% 区间为 −6.3 至 +8.7 厘米。15 段实拍的 1,600 个配对帧上，两者相对双目参考的平均偏差为 39.8 和 39.3 厘米。现有精度仍不足以区分两种网络在同一拟合器下的整体表现。</p>
+</section>
 </article></section>
 <section class="wrap section last" id="limits"><p class="kicker">DISCUSSION</p><h2>局限与下一步</h2><div class="limits-grid"><article><h3>真实深度的参照精度</h3><p>本次实拍来自同一场地、同一次录制。B、C 两部手机的标定和同步误差会计入偏差。下一步可用测量控制点或动捕独立核查参考精度。</p></article><article><h3>长遮挡与相机位移</h3><p>超过 2 秒的检测空白更依赖网络先验。目前逐帧标定主要补偿固定相机中心附近的旋转。跨场馆、侧向视角和明显平移仍需独立验证。</p></article></div>
   <div class="resources"><a href="assets/real-results.csv" download>15 段实拍结果 CSV</a><a href="https://zdc852636-code.github.io/st3d-three-camera-report/" target="_blank" rel="noopener">完整三机位回放</a></div>
