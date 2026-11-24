@@ -1,13 +1,9 @@
 # FeatherTrace3D
 
-Monocular Trajectory Reconstruction with Local Appearance, Rally-Level Modeling, and Physical Refinement
+**Monocular Trajectory Reconstruction with Local Appearance, Rally-Level Modeling, and Physical Refinement**
 
-[Open the project page](https://zdc852636-code.github.io/feathertrace3d-project-page/)
+[Project page](https://zdc852636-code.github.io/feathertrace3d-project-page/) · [Research video](https://zdc852636-code.github.io/feathertrace3d-project-page/#films) · [Interactive examples](https://zdc852636-code.github.io/feathertrace3d-project-page/#examples) · [中文导师汇报](https://zdc852636-code.github.io/feathertrace3d-advisor-report/)
 
-[Watch the research film](https://zdc852636-code.github.io/feathertrace3d-project-page/#research-film) · 3:29, English narration and on-screen captions.
+[![Overview of the reconstruction pipeline](assets/overview.svg)](https://zdc852636-code.github.io/feathertrace3d-project-page/#method)
 
-Explore synchronized hand-held video and 3D reconstructions, the method overview, depth precision analysis, and evaluations against an independent stereo reference. The paper link will be added when the arXiv preprint is available.
-
-## Local preview
-
-Run `python -m http.server 8000` from the repository root, then open `http://localhost:8000/`. Edit the text and sections in `index.html`, layout in `style.css`, and synchronized playback in `app.js`. The page uses static assets and works without a build step.
+Explore the paper’s four contributions and the 3:05 supplementary film. The three phone recordings show our reconstruction alongside a synchronized stereo reference. Three tournament broadcasts illustrate our reconstruction from a broadcast camera and dataset-provided 2D observations.

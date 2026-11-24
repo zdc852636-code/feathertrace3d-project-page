@@ -1,183 +1,474 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
-  <title>FeatherTrace3D · 单目羽毛球三维轨迹重建</title>
-  <meta name="description" content="从一部手持手机重建整回合羽毛球三维轨迹。含真实回放、双目参照、外观消融与同拟合器对照。">
-  <link rel="icon" href="mark.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
-  <script defer src="assets/replays.js"></script><script defer src="app.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f9fe">
+<title>FeatherTrace3D · Monocular Trajectory Reconstruction with Local Appearance, Rally-Level Modeling, and Physical Refinement</title>
+<meta name="description" content="One hand-held phone. A shuttlecock's flight, reconstructed in 3D. Explore real footage, physical refinement, independent stereo references, and depth uncertainty.">
+<link rel="icon" href="mark.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="research.css">
+<link rel="stylesheet" href="rally.css">
+<link rel="stylesheet" href="motion.css">
+<link rel="stylesheet" href="evidence.css?v=method-inline">
+<link rel="stylesheet" href="project.css?v=paper-v7">
+<script defer src="assets/replays.js"></script><script defer src="assets/broadcast-replays.js"></script><script defer src="app.js?v=replay-v7"></script>
 </head>
 <body>
-<a class="skip" href="#top">跳到正文</a>
-<header class="nav"><div class="wrap nav-inner">
-  <a class="brand" href="#top"><img src="mark.svg" alt="" width="27" height="27">FeatherTrace3D</a>
-  <nav aria-label="章节"><a href="#replay">实拍回放</a><a href="#question">研究问题</a><a href="#overview">Overview</a><a href="#contributions">四项贡献</a><a href="#results">实验结果</a><a href="#limits">局限与下一步</a></nav>
-</div></header>
-<main>
-<section class="masthead wrap" id="top" aria-labelledby="paper-name">
-  <h1 id="paper-name" lang="en">Feather<span>Trace</span><em>3D</em></h1>
-  <p class="paper-title" lang="en">Monocular Trajectory Reconstruction with Local Appearance,<br class="wide-break"> Rally-Level Modeling, and Physical Refinement</p>
-  <p class="premise">从一部手持手机的视频，重建羽毛球整回合的三维轨迹。</p>
-  <div class="actions">
-    <button class="pill paper-pending" type="button" disabled>论文 · arXiv 待上线</button>
-    <a class="pill" href="#research-film">观看研究视频 · 3:29</a>
-    <a class="pill primary" href="#overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8v5H8z M3 16h7v5H3z M14 16h7v5h-7z M12 8v4 M6.5 16v-4h11v4"/></svg>方法总览</a>
+<a class="skip" href="#top">Skip to content</a>
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top"><img src="mark.svg" alt="" width="29" height="29">FeatherTrace3D</a>
+    <nav aria-label="Sections">
+      <a href="#overview">Overview</a>
+      <a href="#contributions">Contributions</a>
+      <a href="#results">Results</a>
+      <a href="#films">Video</a>
+      <a href="#examples">Examples</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+<section class="project-overview" id="overview" aria-labelledby="paper-name">
+  <div class="wrap overview-layout">
+    <div class="overview-copy">
+      <h1 id="paper-name" aria-label="FeatherTrace3D">Feather<span class="wordmark-trace">Trace</span><span class="wordmark-3d">3D</span></h1>
+      <p class="paper-subtitle">Monocular Trajectory Reconstruction with Local Appearance, Rally-Level Modeling, and Physical Refinement</p>
+      <p>FeatherTrace3D reconstructs the shuttlecock’s flight and racket contacts from a single hand-held recording.</p>
+      <div class="overview-actions">
+        <a class="overview-primary" href="#contributions">See the contributions</a>
+        <a href="#replay">Try the rally replay</a>
+      </div>
+    </div>
+    <figure class="overview-photo">
+      <img src="assets/case07_A4.jpg" width="960" height="540" fetchpriority="high" alt="A badminton rally filmed from the sideline with a hand-held phone">
+      <figcaption>S6 · Single-phone input</figcaption>
+    </figure>
   </div>
 </section>
-<section class="wrap teaser" id="replay" aria-label="真实回合同步回放">
-  <div class="viewer">
-    <div class="viewer-grid">
-      <figure><figcaption class="visual-label"><b>单目输入</b><span>手持手机 A</span></figcaption><div class="frame"><video id="video" muted playsinline preload="metadata" aria-label="输入手机实拍录像"></video><canvas id="overlay" aria-hidden="true"></canvas></div></figure>
-      <figure><figcaption class="visual-label"><b>三维重建</b><span><i class="sw line"></i> 预测轨迹　<i class="sw dot"></i> 双目参考</span></figcaption><div class="frame court"><canvas id="scene" aria-label="可拖动旋转的三维球场与轨迹" role="img"></canvas></div></figure>
+
+<section class="project-contributions" id="contributions" aria-labelledby="contrib-title">
+  <div class="wrap">
+    <header class="project-heading" data-story-reveal>
+      <h2 id="contrib-title" class="reveal-title">Contributions</h2>
+    </header>
+    <article class="contribution-row" data-story-reveal>
+      <div class="contribution-copy">
+        <h3 class="reveal-title">Neural prediction</h3>
+        <p class="reveal-copy">Local image crops preserve cues lost when a detection is reduced to a point. Short-window and whole-rally attention predict a 3D position at every frame, including missed detections and racket contacts. Shared reprojection updates bring the prediction back to the image. This initialization let the physical fit converge on all 56 rendered rallies.</p>
+      </div>
+      <figure class="research-comparison reveal-evidence">
+        <figcaption>Effect of aligned appearance on neural prediction</figcaption>
+        <dl>
+          <div class="comparison-row">
+            <dt>Shuffled crops and heatmaps</dt><dd class="comparison-value">1.389 m</dd>
+            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 100%"></span></dd>
+          </div>
+          <div class="comparison-row is-highlighted">
+            <dt>Aligned crops and heatmaps</dt><dd class="comparison-value">1.274 m</dd>
+            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 91.7%"></span></dd>
+          </div>
+        </dl>
+        <p>Mean 3D error over 56 simulated rallies. After fitting, the appearance effect was inconclusive.</p>
+      </figure>
+    </article>
+    <article class="contribution-row" data-story-reveal>
+      <div class="contribution-copy">
+        <h3 class="reveal-title">Joint physical refinement</h3>
+        <p class="reveal-copy">A single objective fits flight states, quadratic drag and an editable set of contacts to the original image detections. The neural path initializes the fit and remains a soft constraint across gaps. On 56 rendered rallies the mean error was 0.50 m, compared with 1.27 m for the network alone and 1.24 m for a geometric initialization.</p>
+      </div>
+      <figure class="research-comparison reveal-evidence">
+        <figcaption>Mean 3D error in the 24-rally batch</figcaption>
+        <dl>
+          <div class="comparison-row">
+            <dt>Retime hits only</dt><dd class="comparison-value">0.749 m</dd>
+            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 100%"></span></dd>
+          </div>
+          <div class="comparison-row is-highlighted">
+            <dt>Add, remove, or retime hits</dt><dd class="comparison-value">0.378 m</dd>
+            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 50.5%"></span></dd>
+          </div>
+        </dl>
+      </figure>
+    </article>
+    <article class="contribution-row" data-story-reveal>
+      <div class="contribution-copy">
+        <h3 class="reveal-title">Cramér–Rao analysis</h3>
+        <p class="reveal-copy">With known gravity, a calibrated camera and lateral motion, a whole flight cannot be rescaled along the viewing rays while preserving its dynamics. We derive single-flight depth precision in closed form and a local bound for each rally. Across 28 model-matched rallies, the median ratio of reconstruction RMS error to its bound was 1.37.</p>
+      </div>
+      <figure class="research-comparison reveal-evidence">
+        <figcaption>Depth uncertainty at 30 fps</figcaption>
+        <dl>
+          <div class="comparison-row">
+            <dt>0.5 s of visible flight</dt><dd class="comparison-value">1.88 m</dd>
+            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 100%"></span></dd>
+          </div>
+          <div class="comparison-row is-highlighted">
+            <dt>1.0 s of visible flight</dt><dd class="comparison-value">0.33 m</dd>
+            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 17.7%"></span></dd>
+          </div>
+        </dl>
+        <p>Illustrative bound at 20 m depth with 2 px detection noise.</p>
+      </figure>
+    </article>
+    <article class="contribution-row" data-story-reveal>
+      <div class="contribution-copy">
+        <h3 class="reveal-title">Real hand-held benchmark and evaluation</h3>
+        <p class="reveal-copy">One hand-held phone provides the reconstruction input. Two fixed phones triangulate an independent reference. Across 15 segments recorded at one venue, refinement reduced the mean 3D error in every segment and brought the pooled error to 0.398 m.</p>
+      </div>
+      <figure class="research-comparison reveal-evidence">
+        <figcaption>Three phones, two measurement paths</figcaption>
+        <dl class="capture-protocol"><div><dt>Phone A · monocular input</dt><dd>2,415 frames across 15 segments.</dd></div>
+          <div><dt>Phones B and C · stereo reference</dt><dd>1,600 matched frames used to score 3D distance.</dd></div></dl>
+      </figure>
+    </article>
+  </div>
+</section>
+
+<section class="project-results" id="results" aria-labelledby="results-title">
+  <div class="wrap results-layout" data-story-reveal>
+    <div class="results-copy">
+      <h2 id="results-title" class="reveal-title">Results on real footage</h2>
+      <p class="reveal-copy">Physical fitting reduced the mean distance to an independent stereo reference across 1,600 paired frames from 15 clips.</p>
+      <p class="result-context reveal-copy">The real clips came from one venue. Across 56 simulated rallies, the full method averaged 0.498 m in 3D error.</p>
     </div>
-    <div class="controls"><button id="play" type="button" aria-label="播放回合">播放</button><input id="seek" type="range" aria-label="选择视频帧" min="0" max="178" value="0"><output id="time">0.00 s</output><button id="view" type="button">切换到侧视</button></div>
-    <div class="replay-detail"><span id="caseInfo"></span><span id="obsInfo"></span></div><p class="error" id="videoError" role="status" hidden></p>
+    <figure class="research-comparison result-comparison reveal-evidence">
+      <figcaption>Mean distance to the stereo reference</figcaption>
+      <dl>
+        <div class="comparison-row">
+          <dt>Before physical fitting</dt><dd class="comparison-value">1.078 m</dd>
+          <dd class="comparison-track" aria-hidden="true"><span style="--portion: 100%"></span></dd>
+        </div>
+        <div class="comparison-row is-highlighted">
+          <dt>After physical fitting</dt><dd class="comparison-value">0.398 m</dd>
+          <dd class="comparison-track" aria-hidden="true"><span style="--portion: 36.9%"></span></dd>
+        </div>
+      </dl>
+    </figure>
   </div>
-  <div class="case-gallery" role="group" aria-label="选择实拍片段">
-    <button type="button" data-case="case07_A4" aria-pressed="true"><img src="assets/case07_A4.jpg" alt=""><span><b>Case 07</b><small>论文首页样例</small></span></button>
-    <button type="button" data-case="case05_A8" aria-pressed="false"><img src="assets/case05_A8.jpg" alt=""><span><b>Case 05</b><small>接近总体均值</small></span></button>
-    <button type="button" data-case="case20_A1" aria-pressed="false"><img src="assets/case20_A1.jpg" alt=""><span><b>Case 20</b><small>较高偏差样例</small></span></button>
+</section>
+
+<section class="project-method" id="method" aria-labelledby="method-title">
+  <div class="wrap">
+    <header class="method-opening" data-story-reveal>
+      <h2 id="method-title" class="reveal-title">Reconstruction method</h2>
+      <p class="method-intro reveal-copy" id="method-intro">Select a stage to see its role in the reconstruction.</p>
+    </header>
+    <div class="method-walkthrough" data-story-reveal>
+      <div class="method-stage">
+        <fieldset class="method-picker" id="method-picker" hidden>
+          <legend class="sr-only">Diagram view</legend>
+          <label><input type="radio" name="method-stage" value="observations" aria-controls="method-observations"><span>Observations</span></label>
+          <label><input type="radio" name="method-stage" value="prediction" aria-controls="method-prediction"><span>3D prediction</span></label>
+          <label><input type="radio" name="method-stage" value="fit" aria-controls="method-fit"><span>Physical fitting</span></label>
+          <label><input type="radio" name="method-stage" value="complete" aria-controls="method-complete" checked><span>Full diagram</span></label>
+        </fieldset>
+        <div class="method-readings">
+          <article id="method-observations">
+            <h3>Image observations</h3>
+            <p>Inputs are TrackNetV3 detections, 13 court landmarks, 24 × 24 grayscale crops, and detector heatmaps.</p>
+          </article>
+          <article id="method-prediction">
+            <h3>Initial 3D trajectory</h3>
+            <p>The network links windows of up to 192 frames across the rally. Five shared updates reconcile projections with detections before viewing-ray stabilization.</p>
+          </article>
+          <article id="method-fit">
+            <h3>Physically fitted trajectory</h3>
+            <p>The predicted path initializes and anchors a joint fit of flight states, shared drag, and contact times to the original detections and flight dynamics.</p>
+          </article>
+          <article id="method-complete" hidden>
+            <h3>Complete reconstruction pipeline</h3>
+            <p>Image observations feed a 3D prediction, then a joint fit of flight and contacts.</p>
+          </article>
+        </div>
+        <figure class="overview-figure reveal-evidence">
+          <button id="enlargeOverview" class="figure-button" type="button" aria-label="Enlarge complete method diagram" aria-haspopup="dialog">
+            <span class="method-diagram"><img src="assets/overview.svg" width="2200" height="827" alt="Observations and local appearance feed a rally-level neural predictor, shared reprojection updates, and joint physical fitting."><i class="method-highlight" aria-hidden="true"></i></span>
+            <span>Enlarge complete diagram</span>
+          </button>
+          <figcaption>Side and height views show one recorded rally. Orange marks racket contact. <a href="assets/overview.svg" target="_blank" rel="noopener">Open vector image</a></figcaption>
+        </figure>
+      </div>
+    </div>
   </div>
-  <p class="figure-note">手机 A 是重建的唯一输入，画面中的圆圈标出检测球点。拖动右图可旋转球场。浅色点来自固定手机 B、C，只显示通过质量筛选且时间差不超过 10 毫秒的参考位置。<a href="assets/teaser.png" target="_blank" rel="noopener">论文首图</a></p>
-  <details class="research-film" id="film-panel"><summary>研究视频 <span>3 分 29 秒 · 英文旁白与字幕</span></summary>
-    <video id="research-film" aria-label="FeatherTrace3D 研究视频" controls playsinline preload="none" poster="assets/research-film-poster.jpg" width="1920" height="1080">
-      <source src="assets/feathertrace3d-v2.mp4" type="video/mp4">
-    </video>
-    <p>逐帧对照网络预测、物理修正与双目参考，再比较整回合误差与理论下界。<a href="assets/feathertrace3d-v2.mp4" download>下载 MP4</a></p>
+</section>
+
+<section class="project-notes wrap" aria-labelledby="notes-title" data-story-reveal>
+  <h2 id="notes-title" class="reveal-title">Technical details</h2>
+  <details class="project-detail">
+    <summary>Training and runtime</summary>
+    <div class="project-detail-body">
+      <section class="compute-ledger" id="compute" aria-labelledby="compute-title"><h3 id="compute-title">Training scale and per-rally runtime</h3><dl><div><dt>Main-network training</dt><dd><strong>2.6 million</strong> simulated trajectories</dd><dd>17 epochs from random weights in <b>6 h 14 min</b>. Adaptation and fine-tuning share 100,000 simulated rallies.</dd></div><div><dt>Neural inference</dt><dd><strong>6.87 ms</strong> / 192 frames</dd><dd>RTX 5090: network 2.14 ms, five updates 4.73 ms. Ten post-warm-up calls, one sequence each, with weights and inputs on GPU.</dd></div><div><dt>Physical refinement</dt><dd><strong>1.42 s</strong> / rally</dd><dd>On 24 rendered rallies, one CPU core took a median 0.79 s. The reference implementation averaged 25.5 s. Timing starts from image points, cameras, and neural initialization.</dd></div></dl><details class="network"><summary>Timing scope and evaluation samples</summary><p>Pretraining ran 690,625 updates, including rendering, waits, saves, and validation in wall time. Adaptation and fine-tuning ran 300,000 and 50,000 updates. Comparison rounds took 11.32 and 9.40 hours, including setup, multiple configurations, and validation.</p><p>The paper separately times prediction through fitting on 56 rendered rallies at <b>1.7 s/rally</b> on one CPU core, excluding detection and calibration. Fitting keeps network weights frozen.</p></details></section>
+    </div>
+  </details>
+  <details class="project-detail">
+    <summary>Experiments and depth derivation</summary>
+    <div class="project-detail-body">
+  <ol class="contrib-list studies">
+<li id="neural">
+  <h3>Appearance and rally context</h3>
+  <p class="lead">Local shuttle appearance and rally motion help fill short gaps.</p>
+  <div class="study-grid study-flow">
+    <article class="study-text">
+      <h4>Network inputs and reprojection</h4>
+      <p>Spot size and streaks add cues beyond coordinates. A three-layer encoder uses the 24 × 24 grayscale crop and heatmap. Crop center and scale preserve frame alignment, and missing detections are masked.</p>
+      <div class="equation">
+        <span>Per-frame feature fusion</span>
+        <div>z<sub>t</sub> = E<sub>coordinates</sub> + E<sub>image</sub> + E<sub>crop</sub></div>
+        <small>Sum of three 192-dimensional encodings.</small>
+      </div>
+      <p>Two attention layers process windows of up to 192 frames and two connect the rally. Five shared updates use visible residuals <i>rₜ = mₜ(yₜ − π(pₜ))</i> before viewing-ray stabilization.</p>
+    </article>
+    <article class="ablation">
+      <h4>Input ablation at equal training budgets</h4>
+      <p>Three seeds per model, trained from scratch on 1,024 simulated rallies and tested on the same 48.</p>
+      <table>
+        <thead><tr><th scope="col">Input</th><th scope="col">Neural</th><th scope="col">After fitting</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Single-frame coordinates</th><td>1.580 m</td><td>0.777 m</td></tr>
+          <tr><th scope="row">Temporal coordinates</th><td>1.152 m</td><td>0.627 m</td></tr>
+          <tr class="accentrow"><th scope="row">Temporal + aligned appearance</th><td>0.779 m</td><td>0.602 m</td></tr>
+          <tr><th scope="row">Temporal + shuffled appearance training</th><td>1.195 m</td><td>0.637 m</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Separate 56-rally test.</strong> Shuffling the paper model's crops and heatmaps raised neural error by 0.115 m (95% CI 0.005–0.225 m). The post-fit increase was 0.017 m, with a CI spanning zero.</p>
+      <p class="caption">The stabilized network led learned predictors in the main comparison and let the fitter converge on all 56 rendered rallies.</p>
+    </article>
+  </div>
+</li>
+<li id="physical">
+  <h3>Joint estimation of flight and contacts</h3>
+  <p class="lead">Fit the trajectory and racket contacts together.</p>
+  <div class="study-grid study-flow">
+    <article class="study-text">
+      <h4>Flight equations and fitting objective</h4>
+      <p>Flights follow gravity and quadratic drag <i>p′ = v, v′ = g − k‖v‖v</i>. At contact, position stays continuous and velocity can jump. Turns in the 2D track and neural reversals propose edits, which must lower the objective.</p>
+      <div class="equation">
+        <span>Joint objective</span>
+        <div>min<sub>Θ,k,τ</sub> Σ<sub>visible frames</sub> ρ(‖π(pₜ) − yₜ‖ / σ)<br> + λₚ L<sub>neural</sub> + λ<sub>c</sub> L<sub>continuity</sub> + λₖ L<sub>drag</sub> + β N<sub>contacts</sub></div>
+        <small>Θ = flight states, k = shared drag, τ = contact times. β penalizes each extra contact.</small>
+      </div>
+      <p>Reprojection ties the fit to detections. The neural path anchors gaps. This comparison took about 1.6 s per rendered rally on one CPU core.</p>
+    </article>
+    <article class="evidence">
+      <h4>Contact-editing comparison</h4>
+      <p>Mean 3D error (m) with the same neural initialization and soft anchor.</p>
+      <table>
+        <thead><tr><th scope="col">Contact edits</th><th scope="col">24 rallies</th><th scope="col">32 rallies</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Fixed times</th><td>1.294</td><td>1.166</td></tr>
+          <tr><th scope="row">Adjust times</th><td>0.749</td><td>0.768</td></tr>
+          <tr class="accentrow"><th scope="row">Add, remove, and adjust</th><td>0.378</td><td>0.589</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Across 56 rendered rallies,</strong> mean error was 1.274 m for the stabilized network, 1.241 m for the fitter with geometric initialization, and 0.498 m for the full method.</p>
+    </article>
+  </div>
+</li>
+<li id="depth"><h3>Monocular depth precision</h3><p class="lead">Several 3D paths can share an image curve. Known gravity constrains scale. Depth precision depends on observation time and pixel noise.</p><figure class="ray-figure"><img src="assets/ray-ambiguity.svg" alt="An original path and a 0.8-times camera-centered scaling have identical image projections but different heights and 3D positions."><figcaption>Scaling by 0.8 about the camera changes height while preserving the image path. This illustrates perspective alone.</figcaption></figure><figure class="precision-example" aria-labelledby="precision-title">
+  <div class="precision-reading">
+    <h4 id="precision-title">Observation duration and depth uncertainty</h4>
+    <p>With fixed frame rate and negligible drag, depth standard deviation scales as T<sup>−5/2</sup>.</p>
+    <div class="precision-control" hidden>
+      <label for="flight-duration">Visible flight duration</label>
+      <input id="flight-duration" type="range" min="0.5" max="1.5" step="0.1" value="0.5" aria-describedby="precision-assumptions">
+    </div>
+    <output id="flightPrecision" for="flight-duration">0.5 s · 15 frames · 1.88 m</output>
+  </div>
+  <div class="precision-plot" aria-hidden="true" hidden>
+    <p>Depth standard deviation (m)</p>
+    <canvas id="precision-chart"></canvas>
+  </div>
+  <figcaption id="precision-assumptions">At 30 fps, 20 m depth, 1,313 px focal length, 2 px noise, and about 9 m/s² transverse gravity, 1 s gives about 18% of the depth uncertainty at 0.5 s.</figcaption>
+</figure>
+<details class="theory contribution-proof" id="theory"><summary>Derivation of the precision bound</summary><p class="intro">The bound quantifies depth uncertainty from pixel noise under the flight model.</p><div class="derivation"><article><h3>How does gravity fix scale?</h3><p>Scaling along viewing rays by s preserves pixels. Fix the camera center, gravity, and timestamps, then cross the difference of the flight equations with velocity to eliminate drag. With transverse gravity,</p><div class="summary-formula" role="math" aria-label="s minus one times the cross product of gravity and velocity equals zero, implying s equals one">(s − 1)(<b>g</b> × <b>v</b>) = 0 &nbsp;⇒&nbsp; s = 1</div></article><article><h3>Why does longer observation help?</h3><p>With negligible drag and nearly fixed depth, curvature grows as T². Uniform samples with independent noise add a √N factor, with N proportional to T at fixed frame rate.</p><div class="summary-formula" role="math" aria-label="Depth standard deviation scales as one over square root N times T squared">σ<sub>z</sub> ∝ 1/(√N T²) ∝ T<sup>−5/2</sup></div></article></div>
+<article class="rally-bound" id="rally-bound"><h3>A local bound for the whole rally</h3><p>Cameras, visible frames, and pixel noise set a rally-specific precision bound in meters.</p><ol class="bound-steps"><li><div><h4>Write visible observations</h4><p>For a fixed contact structure, project the flight from θ (states, shared drag, and contact times). Stack observations y over visible frames V.</p></div><div class="bound-formulas"><div>hₜ(θ) = π<sub>γₜ</sub>(pₜ(θ))</div><div>y = h(θ) + ε, ε ∼ 𝒩(0, Ω)</div></div></li><li><div><h4>Measure information in pixel motion</h4><p>H measures pixel sensitivity to θ. For known, θ-independent covariance Ω, Fisher information is the expected outer product of the Gaussian score s.</p></div><div class="bound-formulas"><div>Hₜ = (∂π<sub>γₜ</sub>/∂pₜ)(∂pₜ/∂θ), t ∈ V</div><div>s = ∇<sub>θ</sub> log L = Hᵀ Ω⁻¹(y − h)</div><div>I<sub>obs</sub> = 𝔼[ssᵀ] = Hᵀ Ω⁻¹ H</div></div></li><li><div><h4>Propagate information into 3D uncertainty</h4><p>Gₜ measures 3D position sensitivity. Motion invisible to the camera has no finite pixel-based bound. For estimable positions and locally unbiased estimates,</p></div><div class="bound-formulas"><div>Gₜ = ∂pₜ/∂θ</div><div>ker(I<sub>obs</sub>) ⊆ ker(Gₜ)</div><div>Cov(p̂ₜ) ⪰ Gₜ I<sub>obs</sub><sup>†</sup> Gₜᵀ</div></div></li><li><div><h4>Summarize one metric bound per rally</h4><p>Average the summed coordinate variances over M target frames and take the square root. Use the same frames for empirical RMSE.</p></div><div class="bound-formulas"><div>B = √[(1/M) Σₜ tr(Gₜ I† Gₜᵀ)]</div><div>Rally error ratio = RMSE / B</div></div></li></ol><p>† denotes the pseudoinverse. Pixel-only bounds use I = I<sub>obs</sub>. Rendered bounds add a simulator drag prior. Real bounds are evaluated at the fitted path. Image and learned priors may yield errors below this bound. <a href="#bound-results">Compare empirical results</a></p><details class="network theory-details"><summary>What if camera calibration is uncertain?</summary><p>When estimating γ and θ jointly, eliminate γ using the invertible calibration block.</p><div class="bound-formulas"><div>I<sub>θ|γ</sub> = I<sub>θθ</sub> − I<sub>θγ</sub> I<sub>γγ</sub><sup>−1</sup> I<sub>γθ</sub></div></div><p>The positive semidefinite term can only reduce trajectory information. Rendered bounds treat supplied cameras as exact.</p></details></article></details>
+<article class="bound-results" id="bound-results"><h4>Empirical errors and precision bounds</h4><div class="table-scroll"><table><caption>Mean per-rally bounds and RMSEs, with the median individual RMSE/bound ratio.</caption><thead><tr><th>Scenario</th><th>RMS bound (m)</th><th>RMSE (m)</th><th>Median ratio</th></tr></thead><tbody><tr class="accentrow"><td>Matched rendering · 28 rallies</td><td>0.164</td><td>0.264</td><td>1.37×</td></tr><tr><td>Mismatched rendering · 28 rallies</td><td>0.406</td><td>1.080</td><td>2.80×</td></tr><tr><td>All rendering · 56 rallies</td><td>0.285</td><td>0.672</td><td>1.95×</td></tr><tr><td>Real · 15 clips, plug-in</td><td>0.233</td><td>0.502</td><td>3.97×</td></tr></tbody></table></div><p class="caption">Rendered bounds use simulator trajectories and exact cameras. Real bounds use fitted paths and B/C reference errors. The 0.502 m averages clip RMSEs. The 0.398 m in Results averages paired-frame distances.</p><p class="finding"><b>Calibration and drag explain much of the gap.</b> On 24 rendered rallies, adding true contacts, cameras, then drag changed the median RMSE/bound ratio from 1.87 to 1.96, 1.55, and 1.13.</p></article></li>
+<li id="benchmark">
+  <h3>Stereo reference protocol</h3>
+  <p class="lead">One hand-held phone reconstructs the rally. Two fixed phones supply an independent reference.</p>
+  <dl class="reference-roles">
+    <div><dt>Phone A</dt><dd>Single hand-held input</dd><dd>Court lines help compensate for camera rotation.</dd></div>
+    <div><dt>Phones B and C</dt><dd>Fixed stereo reference</dd><dd>Triangulate the shuttle for evaluation, paired within 10 ms.</dd></div>
+  </dl>
+  <details class="network reading-detail">
+    <summary>Matching criteria and error metric</summary>
+    <p>A is calibrated before recording. B/C require reprojection residual &lt; 3 px, ray angle &gt; 15°, and propagated SD &lt; 0.15 m. Calibration and timing still affect the reference.</p>
+    <div class="equation"><span>Mean 3D distance to the reference</span><div>ē = (1 / M) Σ<sub>paired frames</sub> ‖p̂<sup>A</sup><sub>t</sub> − p<sup>BC</sup><sub>t</sub>‖₂</div><small>Time difference ≤ 10 ms; M = 1,600; frames weighted equally; meters.</small></div>
+    <p>15 clips from 12 recording windows yielded 1,600 stereo matches across 2,415 input frames.</p>
+  </details>
+</li>
+</ol>
+    </div>
+  </details>
+  <details class="project-detail">
+    <summary>Evaluation tables and follow-up comparisons</summary>
+    <div class="project-detail-body">
+<section class="clip-results" id="clip-results" aria-labelledby="clip-results-title">
+  <h3 id="clip-results-title">Real footage by clip</h3>
+  <p id="clip-instruction" hidden>Select a clip to see its measurements.</p>
+  <div class="clip-explorer">
+    <div class="clip-readout">
+      <div class="clip-selection" aria-live="polite" aria-atomic="true">
+        <p id="clip-selection-title">All 15 clips</p>
+        <dl class="clip-values">
+          <div><dt>Network with stabilization</dt><dd id="clip-before">1.078 m</dd></div>
+          <div><dt>After physical fitting</dt><dd id="clip-after">0.398 m</dd></div>
+        </dl>
+        <p id="clip-coverage">1,600 of 2,415 frames paired. Paired frames have equal weight.</p>
+      </div>
+      <div class="clip-actions">
+        <button id="clip-overall" type="button" hidden>All clips</button>
+        <a id="clip-replay-link" href="#replay" hidden>Open clip in replay <span aria-hidden="true">↘</span></a>
+      </div>
+    </div>
+    <div class="clip-chart" id="clip-chart" hidden>
+      <div class="clip-chart-heading">
+        <p>Distance to stereo reference (m)</p>
+        <div class="clip-legend"><span>Network</span><span>After fitting</span></div>
+      </div>
+      <div class="clip-axis" id="clip-axis" aria-hidden="true"></div>
+      <div class="clip-rows" id="clip-rows" role="group" aria-label="Select a recorded clip"></div>
+    </div>
+  </div>
+  <details class="network reading-detail" id="clip-data">
+    <summary>Per-clip values and reference coverage</summary>
+    <div class="table-scroll"><table id="clip-table">
+      <thead><tr><th scope="col">Clip</th><th scope="col">Network (m)</th><th scope="col">After fit (m)</th><th scope="col">Paired / total</th></tr></thead>
+      <tbody>
+      <tr data-clip="case04_A7_1"><th scope="row">S3</th><td>1.478</td><td>0.172</td><td>76 / 180</td></tr>
+      <tr data-clip="case02_A4"><th scope="row">S2</th><td>0.732</td><td>0.203</td><td>30 / 80</td></tr>
+      <tr data-clip="case07_A4"><th scope="row">S6</th><td>1.112</td><td>0.217</td><td>130 / 179</td></tr>
+      <tr data-clip="case17_A8_2"><th scope="row">S11</th><td>0.829</td><td>0.319</td><td>84 / 109</td></tr>
+      <tr data-clip="case12_A4"><th scope="row">S7</th><td>1.098</td><td>0.355</td><td>93 / 114</td></tr>
+      <tr data-clip="case18_A8_2"><th scope="row">S13</th><td>0.725</td><td>0.357</td><td>136 / 197</td></tr>
+      <tr data-clip="case17_A8_1"><th scope="row">S10</th><td>0.780</td><td>0.358</td><td>89 / 119</td></tr>
+      <tr data-clip="case19_A8"><th scope="row">S14</th><td>0.832</td><td>0.362</td><td>212 / 318</td></tr>
+      <tr data-clip="case05_A8"><th scope="row">S5</th><td>0.846</td><td>0.407</td><td>123 / 230</td></tr>
+      <tr data-clip="case18_A8_1"><th scope="row">S12</th><td>1.149</td><td>0.429</td><td>138 / 172</td></tr>
+      <tr data-clip="case01_A0"><th scope="row">S1</th><td>0.985</td><td>0.429</td><td>58 / 93</td></tr>
+      <tr data-clip="case04_A7_2"><th scope="row">S4</th><td>1.109</td><td>0.448</td><td>78 / 180</td></tr>
+      <tr data-clip="case14_A7"><th scope="row">S9</th><td>1.813</td><td>0.482</td><td>116 / 147</td></tr>
+      <tr data-clip="case13_A7"><th scope="row">S8</th><td>1.386</td><td>0.612</td><td>134 / 168</td></tr>
+      <tr data-clip="case20_A1"><th scope="row">S15</th><td>1.228</td><td>0.628</td><td>103 / 129</td></tr>
+      </tbody>
+    </table></div>
+    <p class="caption"><a href="assets/real-results.csv" download>Download CSV</a> · <a href="assets/real-pairs.svg" target="_blank" rel="noopener">Open paper figure</a></p>
   </details>
 </section>
+<div class="result-grid results-chart"><article class="chart-card"><h3>Method comparisons by dataset</h3><div class="tabs" id="metricTabs" role="group" aria-label="Evaluation dataset"><button type="button" data-set="real" aria-pressed="true">Real video</button><button type="button" data-set="all" aria-pressed="false">All rendered</button><button type="button" data-set="matched" aria-pressed="false">Matched</button><button type="button" data-set="mismatch" aria-pressed="false">Mismatched</button></div><p class="chart-unit" id="chartUnit"></p><div id="bars"></div><p class="caption" id="chartNote"></p></article></div><details class="network"><summary>Full comparison table <span>56 rendered rallies · 15 real clips</span></summary><div class="table-scroll"><table id="fullTable"><caption>Mean 3D distances (m). Equal weight per rendered rally or paired real frame.</caption><thead><tr><th>Method</th><th>Matched</th><th>Mismatched</th><th>All rendered</th><th>Real reference distance</th></tr></thead><tbody></tbody></table></div><p class="caption">Methods share detections and calibration. Learned baselines share badminton adaptation and differ in pretraining. MonoTrack core proposes contacts and assumes endpoint planes. Its oracle also receives contact frames and endpoints.</p></details>
+<article class="followup" id="progress"><p class="kicker">FOLLOW-UP &nbsp; / &nbsp; 2026.11.20</p><h3>Compare networks inside the same physical fitter</h3><p class="intro">The paper compares the full pipeline with TT4D's neural output. This follow-up runs both in the same frozen fitter and tests extra contact candidates.</p><div class="progress-grid"><div class="table-scroll"><table><thead><tr><th>Same physical fitter</th><th>Rendered error</th><th>Real reference distance</th></tr></thead><tbody><tr><td>FeatherTrace3D · paper v6.5</td><td>0.498 m</td><td>0.398 m</td></tr><tr><td>FeatherTrace3D · more contact candidates</td><td>0.475 m</td><td>0.410 m</td></tr><tr><td>TT4D + same fitter</td><td>0.467 m</td><td>0.393 m</td></tr></tbody></table><p class="caption">Rules came from 44 development rallies. Evaluation reuses 56 rendered rallies and 15 real clips. The rendered set had informed the hypotheses.</p></div><div class="takeaway"><h3>Effect of additional contact candidates</h3><p>Extra contacts lowered rendered error and raised real deviation. Versus TT4D in the same fitter, the paired rendered difference was about 0.009 m (95% interval −0.088 to +0.109 m).</p></div></div><details class="network reading-detail"><summary id="paired-followup">Paired re-evaluation with the same fitter</summary><figure><img src="assets/paired-comparison.png" width="1519" height="608" loading="lazy" style="max-width:100%;height:auto" alt="Per-clip reference deviations and paired differences with 95% intervals under five protocols."><figcaption class="caption">Right panel shows FeatherTrace3D minus TT4D with the same fitter. Negative favors FeatherTrace3D.</figcaption></figure><p>On 24 preselected new simulated rallies with exact calibration and actual detections, mean errors were 44.0 vs. 42.7 cm (+1.3 cm, 95% interval −6.3 to +8.7 cm). On 1,600 matched frames from 15 real clips, reference deviations were 39.8 vs. 39.3 cm. The shared-fitter tests were inconclusive about which network performs better.</p></details></article>
+    </div>
+  </details>
+  <details class="project-detail" id="limits">
+    <summary>Evaluation limitations</summary>
+    <div class="project-detail-body limitations-copy">
+          <h3>Reference accuracy in real video</h3>
+          <p>One session at one venue. B/C calibration and sync affect measured errors. Surveyed points or motion capture could validate the reference.</p>
+          <h3>Long occlusions and camera translation</h3>
+          <p>Gaps over 2 s rely more on the neural prior. Calibration mainly corrects rotation about a fixed center. Other venues, side views, and large translations need validation.</p>
 
-<section class="wrap section paper-intro" id="question">
-  <p class="kicker" lang="en">RESEARCH QUESTION</p><h2>一部手机能恢复多少三维信息？</h2>
-  <p class="intro">高远球需要拍下整个球场，画面里的球往往只剩几个模糊像素。乒乓球的台面反弹可以提供深度线索，羽毛球在两次击球之间却没有这样的已知接触面。MonoTrack 用球员姿态提出击球分段，拟合结果依赖分段和起点。时序网络能补全漏检，但输出的深度仍可能与原片中的球点不一致。我们的出发点是让网络先给出完整球路，再允许原始图像观测和飞行动力学共同修改它。</p>
+      <div class="resources">
+        <a href="assets/real-results.csv" download>Results CSV</a>
+        <a href="https://zdc852636-code.github.io/st3d-three-camera-report/" target="_blank" rel="noopener">Three-camera reference</a>
+      </div>
+    </div>
+  </details>
 </section>
-<section class="method-band" id="overview"><div class="wrap section" id="method">
-  <div class="section-title"><p class="kicker">METHOD</p><h2 lang="en">Overview</h2><p class="intro">一帧球点只给出视线方向。FeatherTrace3D 用局部外观和整回合运动估计深度，再以图像观测、击球时刻和飞行动力学校正轨迹。</p></div>
-  <figure class="overview-figure">
-    <button id="enlargeOverview" class="figure-button" type="button" aria-label="放大论文方法总览图" aria-haspopup="dialog"><img src="assets/overview.svg" width="2200" height="827" alt="FeatherTrace3D 方法总览，从左至右为观测与局部外观、整回合主网络、共享重投影反馈和联合物理拟合"><span>放大原图 ⤢</span></button>
-    <figcaption>论文图 2 · 从左向右读到最终三维轨迹。右下角是同一真实回合的侧视轨迹和高度变化，橙点标出击球事件。<a href="assets/overview.svg" target="_blank" rel="noopener">打开矢量原图</a></figcaption>
-  </figure>
-  <div class="method-notes">
-    <article><h3>从像素到球路 <span lang="en">Pipeline</span></h3><p>TrackNetV3 使用作者公开权重生成候选球点。系统结合球点、13 个球场标志点、24 × 24 灰度裁片和热图生成三维预测，再以这条轨迹为软约束，联合拟合飞行状态、阻力和击球时刻。</p></article>
-    <article><h3>网络如何估计深度 <span lang="en">Network</span></h3><p>主网络先在最多 192 帧的窗口内编码运动，再让整回合的观测相互关联，补足漏检帧。共享的修正网络把预测投回原画面，比较球点偏差，迭代五轮后沿视线稳定轨迹。</p></article>
+<dialog id="overviewDialog" aria-labelledby="dialogTitle"><div class="dialog-bar"><h3 id="dialogTitle">Method overview</h3><button type="button" id="zoomOverview" aria-pressed="false">Zoom in</button><button id="closeOverview" type="button" autofocus>Close</button></div><div class="figure-scroll" tabindex="0" aria-label="Scroll to inspect the enlarged figure"><img src="assets/overview.svg" alt="High-resolution vector method overview"></div></dialog>
+
+<section class="film-band" id="films" aria-labelledby="films-title">
+  <div class="wrap section film-feature">
+    <header class="project-heading"><h2 id="films-title">Research video</h2></header>
+    <video id="research-film" aria-label="FeatherTrace3D supplementary video v7" controls playsinline preload="metadata" poster="assets/research-film-poster.jpg" width="1920" height="1080"><source src="assets/feathertrace3d-v7.mp4" type="video/mp4"></video>
+    <div class="film-body"><div class="film-chapters" role="group" aria-label="Research video chapters">
+      <button type="button" data-long-time="27.5">Physical refinement <span class="chapter-time">0:27</span></button>
+      <button type="button" data-long-time="44.125">Stereo reference <span class="chapter-time">0:44</span></button>
+      <button type="button" data-long-time="91">Baseline view <span class="chapter-time">1:31</span></button>
+      <button type="button" data-long-time="110.792">Depth precision <span class="chapter-time">1:51</span></button>
+    </div><a href="assets/feathertrace3d-v7.mp4" download>Download MP4 · 3:05</a></div>
   </div>
-  <section class="compute-ledger" id="compute" aria-labelledby="compute-title">
-    <h3 id="compute-title">训练规模与逐回合耗时</h3>
-    <dl>
-      <div><dt>主网络训练</dt><dd><strong>260 万条</strong> 仿真轨迹</dd><dd>从随机权重预训练 17 轮，历时 <b>6 小时 14 分</b>。随后在 10 万个仿真整回合上做时序适配和全网络微调，两阶段复用同一批数据。</dd></div>
-      <div><dt>网络推理</dt><dd><strong>6.87 ms</strong> / 192 帧</dd><dd>RTX 5090 上，主网络平均 2.14 ms，五轮共享修正合计 4.73 ms。每次输入一段，预热后测量 10 次，权重和输入已在显存中。</dd></div>
-      <div><dt>物理修正</dt><dd><strong>1.42 s</strong> / 回合</dd><dd>输入一个回合的可见球点、相机参数和神经初值，逐回合求解。24 个渲染回合上，优化实现的单核 CPU 耗时平均 1.42 秒，中位数 0.79 秒。相同输入下，参考实现平均 25.5 秒。</dd></div>
-    </dl>
-    <details class="network"><summary>计时范围与评估样本</summary>
-      <p>预训练记录了 690,625 次更新，用时包括在线渲染、限载等待、保存和验证。后续的时序适配和全网络微调分别更新 300,000 和 50,000 次。两轮对照实验的合计用时分别为 11.32 和 9.40 小时，各自包含准备、多个配置和验证。</p>
-      <p>GPU 计时从输入张量就绪开始，到五轮修正结束。物理优化器则固定网络权重，用每个回合自身的观测估计飞行状态、共享阻力和击球时刻。论文主表在 56 个渲染回合上另测了网络到物理拟合的总耗时，单核 CPU 平均为 <b>1.7 秒/回合</b>，检测和标定另计。精度评估还包含 15 段实拍，其中 1,600 帧与独立双目参考配对。</p>
-    </details>
-  </section>
-</div></section>
-<dialog id="overviewDialog" aria-labelledby="dialogTitle"><div class="dialog-bar"><h3 id="dialogTitle">Overview · 方法总览</h3><button type="button" id="zoomOverview" aria-pressed="false">放大细节</button><button id="closeOverview" type="button" autofocus>关闭</button></div><div class="figure-scroll" tabindex="0" aria-label="放大后可滚动查看全图"><img src="assets/overview.svg" alt="论文方法总览高清矢量图"></div></dialog>
+</section>
 
-<section class="wrap section" id="contributions" aria-labelledby="contrib-title">
-  <p class="kicker" lang="en">CONTRIBUTIONS</p><h2 id="contrib-title">论文的四项贡献</h2>
-  <div class="contrib-index" aria-label="跳到对应贡献"><a href="#neural">神经预测</a><a href="#physical">物理修正</a><a href="#depth">深度下界</a><a href="#benchmark">实拍评估</a></div>
-  <ol class="contrib-list studies">
-    <li id="neural"><h3>逐帧神经预测 <span lang="en">Neural prediction</span></h3>
-      <p class="lead">球消失的几帧，仍然属于同一条轨迹。我们把可见时留下的形状和拖影，与击球前后的运动放在一起，预测回合中每一帧的位置。</p>
-      <div class="study-grid"><article class="study-text"><h4>保留球点解码时丢掉的外观</h4>
-        <p>两个检测点可以位于同一像素，周围的亮斑大小和拖影却不同。三层卷积编码 24 × 24 灰度裁片与检测热图。裁剪中心和尺度另行输入，让网络知道裁片在原画面里有多大。漏检帧保留时间位置，并以掩码标记。</p>
-        <div class="equation"><span>逐帧特征融合</span><div>z<sub>t</sub> = E<sub>坐标</sub> + E<sub>图像</sub> + E<sub>裁剪</sub></div><small>三路编码各为 192 维，按元素相加。</small></div>
-        <p>前两层注意力观察最长 192 帧的局部窗口，后两层关联整个回合。共享修正器将预测投回图像：可见帧的二维残差为 <i>rₜ = mₜ(yₜ − π(pₜ))</i>。同一个网络用该残差更新五轮，随后沿视线稳定轨迹。</p>
-      </article><article class="ablation"><h4>同一训练预算下的输入消融</h4><p>三组随机种子，每种模型用 1,024 个仿真回合从头训练，在相同的 48 个回合上测试。表中是平均三维距离。</p>
-    <table><thead><tr><th>网络输入</th><th>神经预测</th><th>物理拟合后</th></tr></thead><tbody>
-    <tr><td>单帧坐标</td><td>1.580 m</td><td>0.777 m</td></tr><tr><td>时序坐标</td><td>1.152 m</td><td>0.627 m</td></tr><tr class="accentrow"><td>时序＋对齐外观</td><td>0.779 m</td><td>0.602 m</td></tr><tr><td>时序＋打乱外观训练</td><td>1.195 m</td><td>0.637 m</td></tr></tbody></table>
-    <p class="caption">用论文模型测试 56 个渲染回合时，仅打乱裁片与热图的帧序，神经误差增加 0.115 m（95% 区间 0.005 至 0.225）。物理拟合后增量为 0.017 m，区间跨零。</p>
-  </article></div>
-      <p class="study-end"><strong>网络贡献在哪里？</strong> 对齐外观让神经误差从 1.152 降到 0.779 米；打乱对应关系后为 1.195 米。论文主表中，稳定后的网络在所比较的学习预测器中平均误差最低。用它初始化并约束拟合，56 个渲染回合全部收敛。</p></li>
-    <li id="physical"><h3>联合物理修正 <span lang="en">Joint physical refinement</span></h3>
-      <p class="lead">击球分错一帧，两段飞行就可能接错。我们把击球事件也作为待估变量，让原视频里的二维球点决定哪些分段值得保留。</p>
-      <div class="study-grid"><article class="study-text"><h4>允许击球瞬间改变速度</h4>
-        <p>每段飞行满足重力和二次阻力，<i>p′ = v，v′ = g − k‖v‖v</i>。相邻两段在击球处约束位置衔接，速度可以突变。候选击球取自二维轨迹转向与网络轨迹折返。增加、删除或平移击球时刻后，只有总目标下降才接受修改。</p>
-        <div class="equation"><span>联合优化目标</span><div>min<sub>Θ,k,τ</sub>　Σ<sub>可见帧</sub> ρ(‖π(pₜ) − yₜ‖ / σ)<br> + λₚ L<sub>网络</sub> + λ<sub>c</sub> L<sub>衔接</sub> + λₖ L<sub>阻力</sub> + β N<sub>击球</sub></div><small>Θ 是飞行状态，k 是回合共享的阻力系数，τ 是击球时刻。最后一项惩罚额外击球，限制过度切段。</small></div>
-        <p>网络同时提供初值和软约束，在漏检期间保留深度线索。有观测时，鲁棒重投影项允许物理轨迹偏离网络预测。单核 CPU 拟合一个渲染回合约需 1.6 秒。</p></article>
-      <article class="evidence"><h4>放开击球变量，误差如何变化？</h4><p>三行均使用相同的神经初值和软约束，平均三维误差以米计。</p>
-      <table><thead><tr><th>允许的击球编辑</th><th>24 回合</th><th>32 回合</th></tr></thead><tbody><tr><td>时刻固定</td><td>1.294</td><td>1.166</td></tr><tr><td>可调整时刻</td><td>0.749</td><td>0.768</td></tr><tr class="accentrow"><td>可增删并调整</td><td>0.378</td><td>0.589</td></tr></tbody></table>
-      <p>合并 56 个渲染回合后，仅用稳定后的网络为 <strong>1.274 米</strong>，同一拟合器从几何初值出发为 <strong>1.241 米</strong>，完整方法为 <strong>0.498 米</strong>。</p></article></div></li>
-    <li id="depth"><h3>单目深度的精度下界 <span lang="en">Cramér–Rao analysis</span></h3>
-      <p class="lead">同一条二维曲线可以由深度不同的轨迹投影而成。已知重力能排除整体缩放，观测持续多久、像素有多准，共同决定剩下的深度不确定性。</p>
-      <figure class="ray-figure"><img src="assets/ray-ambiguity.svg" alt="蓝线是原轨迹，橙色虚线沿相机射线缩放到 0.8 倍。二者的二维投影重合，三维侧视和逐帧距离却明显不同。"><figcaption>图中把一条轨迹绕相机中心缩放到 0.8 倍。左图的像素轨迹完全重合，中图的高度不同。缩放后的轨迹仅用于说明透视几何。</figcaption></figure>
-      <div class="depth-law"><div><strong>可见飞行加倍，深度能估准多少？</strong><p>在近似恒深、忽略阻力的单段飞行中，固定帧率和其他条件，可见时长翻倍，深度标准差约降至原来的 18%。</p></div><div class="display-law" aria-label="固定帧率时，深度标准差正比于飞行时长的负二分之五次方">σ<sub>z</sub> ∝ T<sup>−5/2</sup></div></div>
-      <details class="theory contribution-proof" id="theory"><summary>展开下界推导与飞行时长演示</summary>
-  <p class="intro">我们先问哪些三维轨迹会产生完全相同的像素，再问即使飞行模型正确，带噪声的像素允许把深度估到多准。</p>
-
-  <div class="derivation">
-    <article><h3>重力怎样固定尺度？</h3><p>整条轨迹沿视线缩放 s 倍，像素仍重合。相机中心、重力和时间戳固定时，将两条飞行方程相减，再与速度做叉积，沿速度方向的阻力项就消去了。只要球曾横向飞行，就有</p>
-      <div class="summary-formula" role="math" aria-label="s 减一乘以重力和速度的叉积等于零，推出 s 等于一">(s − 1)(<b>g</b> × <b>v</b>) = 0 &nbsp;⇒&nbsp; s = 1</div></article>
-    <article><h3>为什么看得越久，深度越准？</h3><p>忽略阻力、深度近似恒定时，重力造成的像素弯曲随时长 T 的平方增长。均匀采样且像素噪声独立时，多看 N 帧还带来 √N 的收益。固定帧率下 N 与 T 成正比。</p>
-      <div class="summary-formula" role="math" aria-label="深度标准差正比于一除以根号 N 乘时长平方，固定帧率时正比于时长的负二分之五次方">σ<sub>z</sub> ∝ 1/(√N T²) ∝ T<sup>−5/2</sup></div></article>
+<section class="examples-band" id="examples" aria-labelledby="examples-title">
+  <header class="wrap examples-header" data-story-reveal>
+    <h2 id="examples-title" class="reveal-title">Examples</h2>
+    <nav class="reveal-copy" aria-label="Jump to an example">
+      <a href="#replay">Interactive replay</a>
+      <a href="#broadcasts">Broadcast reconstructions</a>
+    </nav>
+  </header>
+<section class="wrap section teaser" id="replay" aria-labelledby="replay-title" data-story-reveal>
+  <div class="section-heading">
+    <h3 id="replay-title" class="reveal-title">Interactive rally replay</h3>
+    <p class="reveal-copy">Play the footage alongside our 3D reconstruction. The phone recordings also show synchronized stereo reference points.</p>
   </div>
-  <div class="flight-demo"><div><b>改变可见飞行时长</b><p>固定 30 帧/秒、深度 20 米、焦距 1,313 像素、像素噪声 2 像素、横向重力约 9 米/秒²。这里单独演示无阻力近似。</p></div><div><div class="tabs" id="flightTimes" role="group" aria-label="可见飞行时长"><button type="button" data-duration="0.5" aria-pressed="true">0.5 秒</button><button type="button" data-duration="1" aria-pressed="false">1 秒</button><button type="button" data-duration="1.5" aria-pressed="false">1.5 秒</button></div><output id="flightPrecision" aria-live="polite">15 帧 · 深度标准差约 1.88 米</output></div></div>
-  <article class="rally-bound" id="rally-bound"><h3>整回合的局部下界</h3>
-    <p>同样是 30 厘米误差，放在清晰长飞行和大段漏检的回合里，含义可能很不一样。我们用每个回合自己的相机、可见帧和像素噪声，算出一把以米计的尺子。</p>
-    <ol class="bound-steps">
-      <li><div><h4>写出可见帧的观测</h4><p>θ 包含各段飞行状态、共享阻力和击球时刻。在给定击球事件结构附近，用含阻力的动力学得到位置 pₜ，再投影到相机。只把可见帧集合 V 中的球点堆叠成 y。</p></div>
-        <div class="bound-formulas"><div>hₜ(θ) = π<sub>γₜ</sub>(pₜ(θ))</div><div>y = h(θ) + ε， ε ∼ 𝒩(0, Ω)</div></div></li>
-      <li><div><h4>从像素变化算出观测信息</h4><p>H 的每一列表示一个参数微调后，可见球点会移动多少。在已知且与 θ 无关的噪声协方差 Ω 下，高斯似然的梯度 s 描述数据对参数的敏感度。对梯度外积取期望，得到 Fisher 信息。</p></div>
-        <div class="bound-formulas"><div>Hₜ = (∂π<sub>γₜ</sub>/∂pₜ)(∂pₜ/∂θ)， t ∈ V</div><div>s = ∇<sub>θ</sub> log L = Hᵀ Ω⁻¹(y − h)</div><div>I<sub>obs</sub> = 𝔼[ssᵀ] = Hᵀ Ω⁻¹ H</div></div></li>
-      <li><div><h4>把信息量换成三维位置的不确定性</h4><p>Gₜ 描述同一组参数变化会让目标帧的三维位置移动多少。若有某个方向能移动球、却完全不改变像素，观测无法给该方向提供有限精度界。对可估目标，局部无偏估计满足协方差下界。</p></div>
-        <div class="bound-formulas"><div>Gₜ = ∂pₜ/∂θ</div><div>ker(I<sub>obs</sub>) ⊆ ker(Gₜ)</div><div>Cov(p̂ₜ) ⪰ Gₜ I<sub>obs</sub><sup>†</sup> Gₜᵀ</div></div></li>
-      <li><div><h4>汇总为每回合一个米制下界</h4><p>对每帧的位置协方差下界取迹，相当于把三个坐标方向的方差相加。对 M 个目标帧取平均再开方，得到 B。实测误差也用同一组目标帧算 RMSE，然后逐回合相除。</p></div>
-        <div class="bound-formulas">
-          <math display="block" aria-label="B 等于目标帧三维协方差下界的迹的平均值开平方"><mi>B</mi><mo>=</mo><msqrt><mrow><mfrac><mn>1</mn><mi>M</mi></mfrac><msub><mo>∑</mo><mi>t</mi></msub><mi mathvariant="normal">tr</mi><mo>(</mo><msub><mi>G</mi><mi>t</mi></msub><msup><mi>I</mi><mo>†</mo></msup><msubsup><mi>G</mi><mi>t</mi><mi mathvariant="normal">T</mi></msubsup><mo>)</mo></mrow></msqrt></math>
-          <div>回合误差比 = RMSE / B</div>
-        </div></li>
-    </ol>
-    <p>† 表示伪逆。仅使用像素时，最后一步取 I = I<sub>obs</sub>。渲染实验还计入模拟器共享阻力系数的先验信息。实拍则在拟合轨迹处代入估算。这个比值衡量实测误差离该回合的局部参照有多远，使用图像和学习先验的模型也可能低于该参照。<a href="#bound-results">对照逐回合实测值</a></p>
-    <details class="network theory-details"><summary>如果相机标定也有误差</summary><p>把相机参数 γ 与飞行参数 θ 联合估计。若标定信息块可逆，消去 γ 后的有效信息为</p>
-      <div class="bound-formulas"><div>I<sub>θ|γ</sub> = I<sub>θθ</sub> − I<sub>θγ</sub> I<sub>γγ</sub><sup>−1</sup> I<sub>γθ</sub></div></div><p>减去的项为半正定矩阵。因此相机参数越难确定，仅凭球点可利用的轨迹信息至多维持原值。论文的渲染下界把给定相机视为准确。</p></details>
-  </article>
-</details>
-      <article class="bound-results" id="bound-results"><h4>逐回合估计误差离下界有多远？</h4>
-    <div class="table-scroll"><table><caption>前两列数值分别是各回合 RMS 下界和实测 RMSE 的均值。最后一列先逐回合相除，再取中位数。</caption><thead><tr><th>场景</th><th>RMS 下界（米）</th><th>实测 RMSE（米）</th><th>逐回合比值中位数</th></tr></thead><tbody>
-      <tr class="accentrow"><td>匹配渲染 · 28 回合</td><td>0.164</td><td>0.264</td><td>1.37 倍</td></tr><tr><td>失配渲染 · 28 回合</td><td>0.406</td><td>1.080</td><td>2.80 倍</td></tr><tr><td>全部渲染 · 56 回合</td><td>0.285</td><td>0.672</td><td>1.95 倍</td></tr><tr><td>实拍 · 15 段，代入估计</td><td>0.233</td><td>0.502</td><td>3.97 倍</td></tr></tbody></table></div>
-    <p class="caption">渲染下界在仿真轨迹处计算，把给定相机参数视为准确。实拍下界在拟合解处代入估计，实测偏差以 B/C 双目轨迹为参照。主表的 0.398 米按配对帧平均距离计分，此处实拍 0.502 米先对每段计算 RMSE，再对 15 段平均。</p>
-    <p class="finding"><b>差距从哪里来？</b>在其中 24 个渲染回合上，依次提供真实击球时刻、真实相机参数和模拟器阻力定律，RMSE/下界的中位数从 1.87 变为 1.96、1.55 和 1.13。相机标定和阻力失配解释了这组实验中相当一部分差距。</p>
-  </article>
-    </li>
-    <li id="benchmark"><h3>手持实拍基准与评估 <span lang="en">Real hand-held benchmark and evaluation</span></h3>
-      <p class="lead">即使轨迹在输入画面里对准了球，沿视线的误差也可能很大。我们让手持手机 A 独立完成推理，再用两部固定手机从另外两个角度核查深度。</p>
-      <div class="study-grid"><article class="study-text"><h4>三部手机，两条独立路径</h4>
-      <p>手机 A 拍摄前先标定球场，逐帧对齐场线来补偿手持旋转。固定手机 B、C 对同一颗球三角化，仅保留重投影残差低于 3 像素、视线夹角大于 15°、传播标准差小于 0.15 米的参考点。</p>
-      <div class="equation"><span>实拍评价指标</span><div>ē = (1 / M) Σ<sub>配对帧</sub> ‖p̂<sup>A</sup><sub>t</sub> − p<sup>BC</sup><sub>t</sub>‖₂</div><small>取时间差不超过 10 毫秒的配对，M = 1,600。每帧等权，单位为米。</small></div>
-      <p>12 个录制窗口切出 15 段，共 2,415 帧。1,600 帧有可用双目参考。网络稳定后的平均参考偏差为 <strong>1.078 米</strong>，物理拟合后为 <strong>0.398 米</strong>，15 段均改善。参考值本身仍受手机标定与同步误差影响。</p></article>
-      <figure class="evidence paired"><h4>逐段比较修正前后的参考偏差</h4><img src="assets/real-pairs.svg" alt="15 段实拍逐段对照。每一段中，物理修正后的平均参考偏差均低于网络预测。"><figcaption>每一列是一段实拍，按修正后偏差从低到高排列。<a href="assets/real-results.csv" download>逐段数值 CSV</a></figcaption></figure></div></li>
-  </ol>
+  <div class="viewer reveal-evidence">
+  <div class="case-gallery" role="group" aria-label="Select a real clip">
+    <button type="button" data-case="case07_A4" aria-pressed="true"><img src="assets/case07_A4.jpg" alt="" width="96" height="54"><span><b>S6</b><small>Method example</small></span></button>
+    <button type="button" data-case="case05_A8" aria-pressed="false"><img src="assets/case05_A8.jpg" alt="" width="96" height="54"><span><b>S5</b><small>Near the overall mean</small></span></button>
+    <button type="button" data-case="case20_A1" aria-pressed="false"><img src="assets/case20_A1.jpg" alt="" width="96" height="54"><span><b>S15</b><small>Higher reference deviation</small></span></button>
+  </div>
+  <div id="broadcasts">
+    <p class="case-group-title">Tournament broadcasts</p>
+    <div class="case-gallery" id="broadcast-cases" role="group" aria-label="Select a tournament broadcast"></div>
+  </div>
+    <div class="viewer-grid">
+      <figure>
+        <figcaption class="visual-label"><b id="input-camera">Phone A</b><span id="input-kind">Monocular footage</span></figcaption>
+        <div class="frame"><video id="video" muted playsinline preload="metadata" aria-label="Input footage from phone A"></video><canvas id="overlay" aria-hidden="true"></canvas></div>
+      </figure>
+      <figure>
+        <figcaption class="visual-label"><b>3D reconstruction</b><span>Drag to orbit</span></figcaption>
+        <div class="frame court"><canvas id="scene" aria-label="3D court and trajectories. Drag or use arrow keys to rotate. Home resets the view." role="img" tabindex="0"></canvas></div>
+      </figure>
+    </div>
+    <div class="controls">
+      <button id="play" type="button" aria-label="Play rally">Play</button>
+      <output id="time">0.00 s</output>
+      <div class="playback-rate" role="group" aria-label="Replay speed">
+        <button type="button" data-rate="1" aria-pressed="true">1×</button>
+        <button type="button" data-rate="0.25" aria-pressed="false">¼×</button>
+      </div>
+      <button id="view" type="button">Side view</button>
+    </div>
+    <div class="timeline">
+      <div class="timeline-heading">
+        <b id="timeline-title">Height above court</b>
+      <div class="timeline-values" aria-label="Estimates at the selected frame">
+          <span id="reference-value"><i class="sw dot" aria-hidden="true"></i>Stereo reference <b id="reference-height">—</b></span>
+          <span><i class="sw line" aria-hidden="true"></i>Ours <b id="fit-height">—</b></span>
+        </div>
+      </div>
+      <div class="timeline-chart">
+        <div class="timeline-scale" aria-hidden="true"><span id="timeline-max"></span><span id="timeline-min">0 m</span></div>
+        <div class="timeline-plot" id="timeline-plot">
+          <canvas id="timeline-canvas" aria-hidden="true"></canvas>
+          <div class="timeline-cursor" aria-hidden="true"></div>
+          <input id="seek" type="range" aria-label="Select a video frame on the timeline" min="0" max="178" value="0">
+        </div>
+        <div class="timeline-axis" id="timeline-axis" aria-hidden="true"></div>
+      </div>
+      <p class="timeline-note" id="timeline-note">Reference gaps mark frames without a stereo match. Drag or use arrow keys to scrub.</p>
+    </div>
+    <div class="compare-tools">
+      <div class="track-toggles" role="group" aria-label="Show or hide trajectories">
+        <label><input id="showFinal" type="checkbox" checked><i class="sw line" aria-hidden="true"></i>Ours</label>
+        <label id="reference-toggle"><input id="showReference" type="checkbox" checked><i class="sw dot" aria-hidden="true"></i>B/C reference</label>
+      </div>
+      <div class="frame-tools"><button type="button" id="prevFrame">Previous frame</button><button type="button" id="nextFrame">Next frame</button><button type="button" id="resetView">Reset view</button></div>
+    </div>
+    <div class="replay-detail"><span id="caseInfo"></span><span id="obsInfo"></span></div>
+    <p class="error" id="videoError" role="status" hidden></p>
+  </div>
+  <div class="case-reading"><p id="caseReading" aria-live="polite"></p><button type="button" id="inspectDepth">Inspect the side view at 0.33 s</button></div>
+  <p class="figure-note" id="reference-note">Circles mark detections. Pale points mark screened B/C stereo references matched within 10 ms. <a href="assets/teaser.png" target="_blank" rel="noopener">Paper teaser</a></p>
+  <p class="figure-note broadcast-note" id="broadcast-note" hidden>
+    <span id="broadcast-protocol"></span>
+    <a id="broadcast-source" target="_blank" rel="noopener">Video and 2D label source</a>
+    <a id="broadcast-trajectory" download>Download 3D coordinates</a>
+  </p>
 </section>
-<section class="wrap section" id="results">
-  <p class="kicker">EXPERIMENTS</p><h2>精度提升来自哪一步？</h2>
-  <dl class="metrics-grid">
-    <div><dt>实拍 · 平均参考偏差</dt><dd><span class="stat-number">0.398</span> <small>m</small></dd><div>15 段实拍，1,600 个配对帧</div></div>
-    <div><dt>渲染 · 平均三维误差</dt><dd><span class="stat-number">0.498</span> <small>m</small></dd><div>56 个回合，各回合等权</div></div>
-    <div><dt>实拍 · 物理拟合后改善</dt><dd><span class="stat-number">15</span> <small>/ 15 段</small></dd><div>与同一片段的稳定后神经预测比较</div></div>
-  </dl>
-  <div class="result-grid results-chart"><article class="chart-card">
-    <h3>单独使用网络或物理模型，会怎样？</h3>
-    <div class="tabs" id="metricTabs" role="group" aria-label="指标数据集"><button type="button" data-set="real" aria-pressed="true">真实录像</button><button type="button" data-set="all" aria-pressed="false">全部渲染</button><button type="button" data-set="matched" aria-pressed="false">模型匹配</button><button type="button" data-set="mismatch" aria-pressed="false">模型失配</button></div>
-    <p class="chart-unit" id="chartUnit"></p><div id="bars"></div><p class="caption" id="chartNote"></p>
-  </article></div>
-  <details class="network"><summary>展开论文主表 <span>56 个渲染回合 · 15 段实拍</span></summary><div class="table-scroll"><table id="fullTable"><caption>平均三维距离，单位为米，越低越好。渲染按回合等权，实拍按配对帧等权。</caption><thead><tr><th>方法</th><th>模型匹配</th><th>模型失配</th><th>全部渲染</th><th>实拍参考偏差</th></tr></thead><tbody></tbody></table></div><p class="caption">所有方法共用检测与标定。学习基线在同一羽毛球适配协议下重训，各模型的预训练经历不同。MonoTrack core 采用自带击球候选及假设端点平面；oracle 额外获知击球帧与端点。</p></details>
 
-<article class="followup" id="progress">
-  <p class="kicker">FOLLOW-UP &nbsp; / &nbsp; 2026.11.20</p><h3>同一物理拟合器下的网络对照</h3>
-  <p class="intro">论文主表把完整管线与 TT4D 的神经输出比较。为检验网络本身的贡献，后续实验也把 TT4D 的输出送入同一个冻结的物理拟合器，并检验增加击球候选是否有帮助。</p>
-  <div class="progress-grid"><div class="table-scroll"><table><thead><tr><th>相同物理拟合器</th><th>渲染误差</th><th>实拍参考偏差</th></tr></thead><tbody><tr><td>FeatherTrace3D · 论文 v6.5</td><td>0.498 m</td><td>0.398 m</td></tr><tr><td>FeatherTrace3D · 增加击球候选</td><td>0.475 m</td><td>0.410 m</td></tr><tr><td>TT4D ＋ 同一拟合器</td><td>0.467 m</td><td>0.393 m</td></tr></tbody></table><p class="caption">44 个开发回合选定规则。评估沿用 56 个渲染回合与 15 段实拍，其中渲染集此前参与过假设形成。</p></div>
-  <div class="takeaway"><h3>物理拟合的收益最稳定</h3><p>增加候选击球时刻改善了渲染结果，实拍参考偏差略升。该变体与 TT4D 同拟合器的渲染配对差约 0.009 m，95% 区间为 −0.088 至 +0.109 m。现有对照尚不能确立网络间的优势。</p></div></div>
-<section aria-labelledby="paired-followup"><h3 id="paired-followup">11 月 23 日 · 同一物理拟合器的配对复验</h3>
-  <figure><img src="assets/paired-comparison.png" width="1519" height="608" loading="lazy" style="max-width:100%;height:auto" alt="左图逐段比较 15 段实拍的双目参考偏差；右图给出五种协议中两方法的配对差与 95% 区间。"><figcaption class="caption">右图按 FeatherTrace3D 减 TT4D 计算。两种网络共用物理拟合器，负值表示 FeatherTrace3D 的误差较小。</figcaption></figure>
-  <p>在预先固定的 24 个新仿真回合上，两种方法均使用准确标定与实际检测点，平均三维误差为 44.0 和 42.7 厘米；配对差为 +1.3 厘米，95% 区间为 −6.3 至 +8.7 厘米。15 段实拍的 1,600 个配对帧上，两者相对双目参考的平均偏差为 39.8 和 39.3 厘米。现有精度仍不足以区分两种网络在同一拟合器下的整体表现。</p>
 </section>
-</article></section>
-<section class="wrap section last" id="limits"><p class="kicker">DISCUSSION</p><h2>局限与下一步</h2><div class="limits-grid"><article><h3>真实深度的参照精度</h3><p>本次实拍来自同一场地、同一次录制。B、C 两部手机的标定和同步误差会计入偏差。下一步可用测量控制点或动捕独立核查参考精度。</p></article><article><h3>长遮挡与相机位移</h3><p>超过 2 秒的检测空白更依赖网络先验。目前逐帧标定主要补偿固定相机中心附近的旋转。跨场馆、侧向视角和明显平移仍需独立验证。</p></article></div>
-  <div class="resources"><a href="assets/real-results.csv" download>15 段实拍结果 CSV</a><a href="https://zdc852636-code.github.io/st3d-three-camera-report/" target="_blank" rel="noopener">完整三机位回放</a></div>
-</section>
-</main><footer><div class="wrap"><b>FeatherTrace3D</b><a href="#top">回到顶部 ↑</a></div></footer>
+</main><footer><div class="wrap"><b>FeatherTrace3D</b><a href="https://zdc852636-code.github.io/feathertrace3d-advisor-report/" lang="zh">中文导师汇报</a><a href="#top">Back to top</a></div></footer>
 </body></html>
