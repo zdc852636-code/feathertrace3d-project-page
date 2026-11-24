@@ -7,6 +7,7 @@
   const first = "case07_A4";
   const scene = byId("scene"), screen = byId("overlay");
   const video = byId("video"), slider = byId("seek"), play = byId("play");
+  if (navigator.connection?.saveData) video.preload = "metadata";
   const film = byId("research-film");
   const mediaSeekVersions = new WeakMap();
   async function playAt(player, seconds){
@@ -192,23 +193,39 @@
   }
   function refresh(){update(frame);}
   function requestFrames(){
-    if(clock!==null || !video.requestVideoFrameCallback || video.paused)return;
+    if(clock!==null || video.paused || video.ended)return;
     const version=sourceVersion;
-    clock=video.requestVideoFrameCallback((_,metadata)=>{
+    function render(_,metadata){
       clock=null;if(version!==sourceVersion)return;
-      update(Math.round(metadata.mediaTime*sample.fps));requestFrames();
-    });
+      const next=bounds(Math.round((metadata?.mediaTime ?? video.currentTime)*sample.fps),0,sample.xyz.length-1);
+      if(next!==frame && pendingSeek===null)update(next);
+      requestFrames();
+    }
+    clock=video.requestVideoFrameCallback ? video.requestVideoFrameCallback(render) : requestAnimationFrame(render);
   }
-  function stopFrames(){if(clock!==null){video.cancelVideoFrameCallback(clock);clock=null;}}
+  function stopFrames(){
+    if(clock===null)return;
+    if(video.requestVideoFrameCallback)video.cancelVideoFrameCallback(clock);
+    else cancelAnimationFrame(clock);
+    clock=null;
+  }
   function playState(){
-    play.textContent=video.paused?"Play":"Pause";
-    play.setAttribute("aria-label",video.paused?"Play rally":"Pause rally");
+    const paused=video.paused || video.ended;
+    const waiting=!paused && video.readyState<video.HAVE_FUTURE_DATA;
+    play.textContent=paused?"Play":waiting?"Loading…":"Pause";
+    play.setAttribute("aria-label",paused?"Play rally":waiting?"Cancel loading":"Pause rally");
   }
   async function start(){
     const version=sourceVersion;
     if(video.ended || frame===sample.xyz.length-1){pendingSeek=null;video.currentTime=0;update(0);}
-    try{await video.play();if(version===sourceVersion)byId("videoError").hidden=true;}
+    try{
+      const started=video.play();
+      playState();
+      await started;
+      if(version===sourceVersion)byId("videoError").hidden=true;
+    }
     catch(error){if(version===sourceVersion && error.name!=="AbortError"){const el=byId("videoError");el.hidden=false;el.textContent="Playback could not start. Try Play again, or inspect individual frames with the slider.";}}
+    finally{if(version===sourceVersion)playState();}
   }
   function selectCase(id, autoplay=false){
     ++sourceVersion;stopFrames();video.pause();sample=replays[id];frame=0;pendingPlay=autoplay;pendingSeek=null;
@@ -217,11 +234,12 @@
       button.setAttribute("aria-pressed",String(button.dataset.case===id));
     });
     slider.max=sample.xyz.length-1;video.poster="assets/"+id+".jpg";
-    const formats = sample.broadcast ? ["webm", "mp4"] : ["mp4"];
-    const sources = formats.map(ext => {
+    const filenames = sample.broadcast ? [id+".webm",id+".mp4"] : [id+".mp4"];
+    if(id==="case07_A4")filenames.unshift(id+"-playback.mp4");
+    const sources = filenames.map(filename => {
       const source = document.createElement("source");
-      source.type = "video/"+ext;
-      source.src = "assets/"+id+"."+ext;
+      source.type = filename.endsWith(".webm") ? "video/webm" : "video/mp4";
+      source.src = "assets/"+filename;
       return source;
     });
     const version=sourceVersion;
@@ -273,7 +291,11 @@
     const button=event.target.closest("[data-case]");
     if(button && button.getAttribute("aria-pressed")!=="true")selectCase(button.dataset.case,!video.paused||pendingPlay);
   });
-  play.addEventListener("click",()=>{pendingPlay=false;if(video.paused)start();else video.pause();});
+  play.addEventListener("click",()=>{
+    pendingPlay=false;
+    if(video.paused)start();
+    else {video.pause();playState();}
+  });
   function linkedCase(hash) {
     if (hash === "#broadcasts") return firstBroadcast;
     return byId(hash.slice(1))?.dataset.case;
@@ -294,17 +316,18 @@
     if(pendingSeek!==null){video.currentTime=pendingSeek/sample.fps;update(pendingSeek);}
     else update(Math.round(video.currentTime*sample.fps));
   });
+  video.addEventListener("waiting",()=>{if(video.readyState<video.HAVE_FUTURE_DATA)stopFrames();playState();});
   video.addEventListener("playing",()=>{playState();requestFrames();});
-  video.addEventListener("pause",()=>{stopFrames();playState();});
+  video.addEventListener("pause",()=>{if(video.paused)stopFrames();playState();});
   video.addEventListener("ended",()=>{stopFrames();update(sample.xyz.length-1);playState();});
-  function showMediaError(){pendingPlay=false;byId("videoError").textContent="The replay could not load. Reload the page or select another clip.";byId("videoError").hidden=false;}
+  function showMediaError(){pendingPlay=false;video.pause();playState();byId("videoError").textContent="The replay could not load. Reload the page or select another clip.";byId("videoError").hidden=false;}
   video.addEventListener("error",showMediaError);
   video.addEventListener("seeked",()=>{
     const actual=Math.round(video.currentTime*sample.fps);
     if(pendingSeek!==null && actual!==pendingSeek)return;
     pendingSeek=null;update(actual);requestFrames();
   });
-  video.addEventListener("timeupdate",()=>{if(pendingSeek===null && (!video.requestVideoFrameCallback || video.paused))update(Math.round(video.currentTime*sample.fps));});
+  video.addEventListener("timeupdate",()=>{if(pendingSeek===null && video.paused)update(Math.round(video.currentTime*sample.fps));});
   slider.addEventListener("input",()=>seekFrame(Number(slider.value)));
   function seekFrame(next){
     pendingPlay=false;video.pause();next=bounds(next,0,sample.xyz.length-1);

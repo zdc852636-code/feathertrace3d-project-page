@@ -77,7 +77,7 @@
 .controls button:hover, .frame-tools button:hover { background: #39485b; }
 .controls .playback-rate button { min-width: 38px; }
 .playback-rate button[aria-pressed="true"] { background: #414d5f; border-color: #8392a6; }
-.controls #play { min-width: 68px; background: #ffbf98; border-color: #ffbf98; color: #1d191b; }
+.controls #play { min-width: 6rem; background: #ffbf98; border-color: #ffbf98; color: #1d191b; }
 .controls #play:hover { background: #ffe3d0; }
 
 .timeline { padding: 12px 16px 13px; border-top: 1px solid #3b4654; background: #171e27; }
