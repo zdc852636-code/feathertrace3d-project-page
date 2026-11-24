@@ -152,8 +152,8 @@ th:first-child,td:first-child{text-align:left}
 @keyframes trace-meter{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @keyframes trace-bar{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0)}}
 @media screen and (prefers-reduced-motion:no-preference){
-  table.tracing td[data-meter]::after{animation:trace-meter .22s cubic-bezier(.22,.61,.36,1) both}
-  #bars.tracing .fill{animation:trace-bar .22s cubic-bezier(.22,.61,.36,1) both}
+  table.in-view td[data-meter]::after{animation:trace-meter .22s cubic-bezier(.22,.61,.36,1) both}
+  #bars.in-view .fill{animation:trace-bar .22s cubic-bezier(.22,.61,.36,1) both}
   #overviewDialog[open]{animation:enter-paper .18s ease-out}
   .fill{transition:transform .16s cubic-bezier(.22,.7,.24,1)}
   .case-gallery button,.controls button,.tabs button{transition:background-color .16s,border-color .16s,box-shadow .16s,transform .16s}

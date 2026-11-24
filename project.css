@@ -252,9 +252,9 @@
   .story-motion .reveal-copy {
     opacity: .45;
     translate: 0 12px;
-    transition: opacity 880ms cubic-bezier(.22, .55, .28, 1), translate 880ms cubic-bezier(.22, .55, .28, 1);
   }
   .story-motion .story-arrived .reveal-copy {
+    transition: opacity 880ms cubic-bezier(.22, .55, .28, 1), translate 880ms cubic-bezier(.22, .55, .28, 1);
     opacity: 1;
     translate: 0 0;
   }

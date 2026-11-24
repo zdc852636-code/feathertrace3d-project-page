@@ -571,37 +571,13 @@
         cell.style.setProperty("--extent",(100*values[i]/maximum)+"%");
       });
     });
-    if(!("IntersectionObserver" in window))return;
-    const initialAnchor=byId(location.hash.slice(1));
-    const seen=new WeakSet();
-    function settle(target){
-      target.classList.remove("tracing");
-      figures.unobserve(target);
-    }
-    const figures=new IntersectionObserver(entries=>{
-      for(const entry of entries){
-        const target=entry.target;
-        if(!entry.isIntersecting && seen.has(target)){settle(target);continue;}
-        if(!entry.isIntersecting || seen.has(target))continue;
-        seen.add(target);
-        if(reducedMotion.matches || initialAnchor?.contains(target)){settle(target);continue;}
-        target.classList.add("tracing");
-      }
-    },{rootMargin:"0px 0px 12% 0px"});
-    const targets=[...tables,byId("bars")];
-    targets.forEach(target=>figures.observe(target));
-    function settleVisible(){
-      targets.filter(target=>seen.has(target)).forEach(settle);
-    }
-    reducedMotion.addEventListener("change",event=>{if(event.matches)settleVisible();});
-    document.addEventListener("visibilitychange",()=>{if(document.hidden)settleVisible();});
-    window.addEventListener("beforeprint",settleVisible);
+    for (const figure of [...tables, byId("bars")]) figure.dataset.animate = "";
   }
   function setupStoryMotion(navigation) {
     const page = document.documentElement;
     const intro = byId("overview");
     const chapters = [...document.querySelectorAll("[data-story-reveal]")]
-      .map(element => ({ element, top: 0, progress: 0 }));
+      .map(element => ({ element, top: 0, bottom: 0, progress: 0 }));
     let navHeight = 0;
     let introTop = 0;
     let introHeight = 0;
@@ -630,7 +606,9 @@
       introTop = introRect.top + scroll;
       introHeight = introRect.height;
       for (const chapter of chapters) {
-        chapter.top = chapter.element.getBoundingClientRect().top + scroll;
+        const rect = chapter.element.getBoundingClientRect();
+        chapter.top = rect.top + scroll;
+        chapter.bottom = rect.bottom + scroll;
       }
       needsMeasure = false;
     }
@@ -660,8 +638,17 @@
 
       const entranceTravel = Math.max(160, (height - navHeight) * .42);
       for (const chapter of chapters) {
-        if (chapter.progress === 1) continue;
-        const progress = bounds((visualScroll + height * 1.04 - chapter.top) / entranceTravel, 0, 1);
+        if (scroll + height <= chapter.top || scroll + navHeight >= chapter.bottom) {
+          if (chapter.progress > 0) {
+            chapter.progress = 0;
+            chapter.element.style.removeProperty("--story-progress");
+            chapter.element.classList.remove("story-arrived");
+          }
+          continue;
+        }
+        const fromBelow = visualScroll + height - chapter.top;
+        const fromAbove = chapter.bottom - visualScroll - navHeight;
+        const progress = bounds(Math.min(fromBelow, fromAbove) / entranceTravel, 0, 1);
         if (progress <= chapter.progress) continue;
         const arrived = chapter.progress < .22 && progress >= .22;
         chapter.progress = progress;
@@ -723,7 +710,7 @@
       result.classList.add("is-counting");
       readout.hidden = false;
       function draw(now) {
-        const progress = Math.min(1, (now - start) / 1100);
+        const progress = bounds((now - start) / 1100, 0, 1);
         if (progress === 1) { finishCount(); return; }
         const value = final + (initial - final) * (1 - progress) ** 3;
         readout.textContent = value.toFixed(3) + " m";
@@ -732,24 +719,40 @@
       }
       draw(start);
     }
-    const observer = new IntersectionObserver(entries => {
+    const targets = document.querySelectorAll("[data-animate]");
+    const enterRatio = .2;
+    function onVisibility(entries) {
       for (const entry of entries) {
-        if (!entry.isIntersecting || entry.intersectionRatio < .3) continue;
-        observer.unobserve(entry.target);
-        if (reducedMotion.matches) continue;
-        entry.target.classList.add("in-view");
-        if (entry.target === result) animateCount();
+        const target = entry.target;
+        if (!entry.isIntersecting || entry.intersectionRatio === 0) {
+          target.classList.remove("in-view");
+          if (target === result) finishCount();
+        } else if (entry.intersectionRatio >= enterRatio && !target.classList.contains("in-view")) {
+          target.classList.add("in-view");
+          if (target === result) animateCount();
+        }
       }
-    }, { threshold: .3 });
-    document.querySelectorAll("[data-animate]").forEach(el => observer.observe(el));
-    reducedMotion.addEventListener("change", () => {
-      if (reducedMotion.matches) {
-        finishCount();
-        document.querySelectorAll("[data-animate].in-view").forEach(el => el.classList.remove("in-view"));
-      }
-    });
-    document.addEventListener("visibilitychange", () => { if (document.hidden) finishCount(); });
-    window.addEventListener("beforeprint", finishCount);
+    }
+    let observer;
+    function stop() {
+      observer?.disconnect();
+      finishCount();
+      targets.forEach(el => el.classList.remove("in-view"));
+    }
+    function observe() {
+      stop();
+      if (reducedMotion.matches || document.hidden) return;
+      const navHeight = navigation.offsetHeight;
+      observer = new IntersectionObserver(onVisibility, {
+        rootMargin: "-" + navHeight + "px 0px 0px", threshold: [0, enterRatio]
+      });
+      targets.forEach(el => observer.observe(el));
+    }
+    reducedMotion.addEventListener("change", observe);
+    document.addEventListener("visibilitychange", observe);
+    window.addEventListener("beforeprint", stop);
+    window.addEventListener("afterprint", observe);
+    observe();
   }
 
   const observer = new ResizeObserver(refresh);
