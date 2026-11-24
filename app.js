@@ -702,6 +702,56 @@
     if (opened) target.scrollIntoView({behavior: "instant"});
   }
 
+  function setupEvidenceMotion() {
+    if (!("IntersectionObserver" in window)) return;
+    const result = document.querySelector(".result-comparison");
+    const finalLabel = result.querySelector(".result-measure");
+    const readout = result.querySelector(".result-tween");
+    const bar = result.querySelector(".is-highlighted .comparison-track > span");
+    const initial = parseFloat(result.querySelector(".comparison-value").textContent);
+    const final = parseFloat(finalLabel.textContent);
+    let frameId = 0;
+
+    function finishCount() {
+      cancelAnimationFrame(frameId);
+      readout.hidden = true;
+      bar.style.removeProperty("transform");
+      result.classList.remove("is-counting");
+    }
+    function animateCount() {
+      const start = performance.now();
+      result.classList.add("is-counting");
+      readout.hidden = false;
+      function draw(now) {
+        const progress = Math.min(1, (now - start) / 1100);
+        if (progress === 1) { finishCount(); return; }
+        const value = final + (initial - final) * (1 - progress) ** 3;
+        readout.textContent = value.toFixed(3) + " m";
+        bar.style.transform = "scaleX(" + value / final + ")";
+        frameId = requestAnimationFrame(draw);
+      }
+      draw(start);
+    }
+    const observer = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting || entry.intersectionRatio < .3) continue;
+        observer.unobserve(entry.target);
+        if (reducedMotion.matches) continue;
+        entry.target.classList.add("in-view");
+        if (entry.target === result) animateCount();
+      }
+    }, { threshold: .3 });
+    document.querySelectorAll("[data-animate]").forEach(el => observer.observe(el));
+    reducedMotion.addEventListener("change", () => {
+      if (reducedMotion.matches) {
+        finishCount();
+        document.querySelectorAll("[data-animate].in-view").forEach(el => el.classList.remove("in-view"));
+      }
+    });
+    document.addEventListener("visibilitychange", () => { if (document.hidden) finishCount(); });
+    window.addEventListener("beforeprint", finishCount);
+  }
+
   const observer = new ResizeObserver(refresh);
   observer.observe(scene);
   new ResizeObserver(drawTimeline).observe(timelineCanvas);
@@ -744,4 +794,5 @@
   openLinkedDetails();
   window.addEventListener("hashchange", openLinkedDetails);
   setupStoryMotion(navigation);
+  setupEvidenceMotion();
 })();

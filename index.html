@@ -9,8 +9,8 @@
 <link rel="stylesheet" href="rally.css">
 <link rel="stylesheet" href="motion.css">
 <link rel="stylesheet" href="evidence.css?v=method-inline">
-<link rel="stylesheet" href="project.css?v=evidence-layout-2">
-<script defer src="assets/replays.js"></script><script defer src="assets/broadcast-replays.js"></script><script defer src="app.js?v=evidence-layout-2"></script>
+<link rel="stylesheet" href="project.css?v=scroll-figures-1">
+<script defer src="assets/replays.js"></script><script defer src="assets/broadcast-replays.js?v=two-matches"></script><script defer src="app.js?v=scroll-figures-1"></script>
 </head>
 <body>
 <a class="skip" href="#top">Skip to content</a>
@@ -96,7 +96,7 @@
     <header class="project-heading"><h2 id="films-title">Research video</h2><a class="film-download" href="assets/feathertrace3d-v7.mp4" download>Download MP4 · 3:05</a></header>
     <div class="film-screening">
     <video id="research-film" aria-label="FeatherTrace3D supplementary video v7" controls playsinline preload="metadata" poster="assets/research-film-poster.jpg" width="1920" height="1080"><source src="assets/feathertrace3d-v7.mp4" type="video/mp4"></video>
-    <div class="film-body"><h3>Chapters</h3><div class="film-chapters" role="group" aria-label="Research video chapters">
+    <div class="film-body"><h3>Chapters</h3><div class="film-chapters" data-animate role="group" aria-label="Research video chapters">
       <button type="button" data-long-time="27.5"><span class="chapter-time">0:27</span> Physical refinement</button>
       <button type="button" data-long-time="44.125"><span class="chapter-time">0:44</span> Stereo reference</button>
       <button type="button" data-long-time="91"><span class="chapter-time">1:31</span> Baseline view</button>
@@ -133,7 +133,7 @@
       <figure class="evidence-card evidence-flight reveal-evidence">
         <figcaption>Height through a baseline return <span>S15</span></figcaption>
         <p class="plot-measure">Height above court (m)</p>
-        <img class="evidence-plot" src="assets/contribution-s15-height.svg" loading="lazy" width="580" height="230" alt="Fitted shuttle height and synchronized stereo measurements across 4.27 seconds of S15.">
+        <div class="flight-scan" data-animate><img class="evidence-plot" src="assets/contribution-s15-height.svg" loading="lazy" width="580" height="230" alt="Fitted shuttle height and synchronized stereo measurements across 4.27 seconds of S15."></div>
         <div class="plot-key"><span class="fit-key">Physical fit</span><span class="stereo-key">Stereo reference</span><span class="axis-unit">Time (s)</span></div>
         <p class="evidence-note">On the 103 stereo-paired frames, mean <strong>3D distance</strong> fell from <strong>1.23 m to 0.63 m</strong>.</p>
       </figure>
@@ -170,7 +170,7 @@
       <figure class="evidence-card evidence-frames reveal-evidence">
         <figcaption>Three hand-held segments</figcaption>
         <p class="plot-measure">Mean 3D distance to the stereo reference</p>
-        <div class="evidence-clips">
+        <div class="evidence-clips" data-animate>
           <a href="#segment-S6" aria-label="Open segment S6 replay, mean 3D error 0.22 metres"><img src="assets/case07_A4.jpg" width="160" height="90" loading="lazy" alt=""><span><b>S6</b> 0.22 m</span></a>
           <a href="#segment-S5" aria-label="Open segment S5 replay, mean 3D error 0.41 metres"><img src="assets/case05_A8.jpg" width="160" height="90" loading="lazy" alt=""><span><b>S5</b> 0.41 m</span></a>
           <a href="#segment-S15" aria-label="Open segment S15 replay, mean 3D error 0.63 metres"><img src="assets/case20_A1.jpg" width="160" height="90" loading="lazy" alt=""><span><b>S15</b> 0.63 m</span></a>
@@ -188,7 +188,7 @@
       <p class="reveal-copy">Physical fitting reduced the mean distance to an independent stereo reference across 1,600 paired frames from 15 clips.</p>
       <p class="result-context reveal-copy">The real clips came from one venue. Across 56 simulated rallies, the full method averaged 0.498 m in 3D error.</p>
     </div>
-    <figure class="research-comparison result-comparison reveal-evidence">
+    <figure class="research-comparison result-comparison reveal-evidence" data-animate>
       <figcaption>Mean distance to the stereo reference</figcaption>
       <dl>
         <div class="comparison-row">
@@ -196,7 +196,7 @@
           <dd class="comparison-track" aria-hidden="true"><span style="--portion: 100%"></span></dd>
         </div>
         <div class="comparison-row is-highlighted">
-          <dt>After physical fitting</dt><dd class="comparison-value">0.398 m</dd>
+          <dt>After physical fitting</dt><dd class="comparison-value"><span class="result-measure">0.398 m</span><span class="result-tween" aria-hidden="true" hidden></span></dd>
           <dd class="comparison-track" aria-hidden="true"><span style="--portion: 36.9%"></span></dd>
         </div>
       </dl>

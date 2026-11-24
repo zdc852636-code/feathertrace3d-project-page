@@ -267,14 +267,8 @@
     translate: 0 0;
     transition: none;
   }
-  .story-motion .story-arrived .comparison-track > span {
-    animation: reveal-comparison 720ms cubic-bezier(.2, .65, .3, 1) 160ms backwards;
-  }
   .nav nav a, .project-detail > summary { transition: color 150ms ease-out; }
   .overview-primary { transition: background-color 150ms ease-out; }
-  @keyframes reveal-comparison {
-    from { transform: scaleX(0); }
-  }
 }
 
 @media print {
@@ -352,4 +346,40 @@
   .evidence-card .precision-control { grid-template-columns: minmax(0,1fr); }
 }
 #reference-toggle[hidden], #reference-value[hidden] { display:none; }
+#broadcast-cases { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.flight-scan { position: relative; }
+.result-comparison .comparison-value { position: relative; }
+.result-tween { position: absolute; right: 0; top: 0; white-space: nowrap; }
+.is-counting .result-measure { opacity: 0; }
+
+@media screen and (prefers-reduced-motion: no-preference) {
+  .flight-scan.in-view img { animation: scan-chart 1450ms linear both; }
+  .flight-scan.in-view::after {
+    content: ""; position: absolute; top: 6%; bottom: 18%; width: 1px;
+    pointer-events: none; background: #a65734;
+    animation: scan-time 1450ms linear both;
+  }
+  @keyframes scan-chart {
+    from { clip-path: inset(0 93% 0 0); }
+    to { clip-path: inset(0 0 0 0); }
+  }
+  @keyframes scan-time {
+    0% { left: 7%; opacity: 0; }
+    8%, 90% { opacity: .85; }
+    100% { left: 100%; opacity: 0; }
+  }
+  .film-chapters.in-view button, .evidence-clips.in-view a {
+    animation: enter-item 520ms cubic-bezier(.2,.67,.3,1) backwards;
+  }
+  [data-animate].in-view > :nth-child(2) { animation-delay: 90ms; }
+  [data-animate].in-view > :nth-child(3) { animation-delay: 180ms; }
+  [data-animate].in-view > :nth-child(4) { animation-delay: 270ms; }
+  @keyframes enter-item {
+    from { opacity: .25; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  #method .method-readings > .is-current h3 { animation: enter-item 280ms ease-out; }
+  .evidence-clips img { transition: transform 220ms ease-out; }
+  .evidence-clips a:is(:hover,:focus-visible) img { transform: scale(1.025); }
+}
 @media (max-width: 640px) { .overview-copy #paper-name { font-size: clamp(39px, 11vw, 69px); } }
