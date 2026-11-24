@@ -9,8 +9,8 @@
 <link rel="stylesheet" href="rally.css">
 <link rel="stylesheet" href="motion.css">
 <link rel="stylesheet" href="evidence.css?v=method-inline">
-<link rel="stylesheet" href="project.css?v=paper-v7">
-<script defer src="assets/replays.js"></script><script defer src="assets/broadcast-replays.js"></script><script defer src="app.js?v=replay-v7"></script>
+<link rel="stylesheet" href="project.css?v=evidence-layout-2">
+<script defer src="assets/replays.js"></script><script defer src="assets/broadcast-replays.js"></script><script defer src="app.js?v=evidence-layout-2"></script>
 </head>
 <body>
 <a class="skip" href="#top">Skip to content</a>
@@ -18,10 +18,10 @@
   <div class="wrap nav-inner">
     <a class="brand" href="#top"><img src="mark.svg" alt="" width="29" height="29">FeatherTrace3D</a>
     <nav aria-label="Sections">
-      <a href="#overview">Overview</a>
+      <a href="#method">Overview</a>
+      <a href="#films">Video</a>
       <a href="#contributions">Contributions</a>
       <a href="#results">Results</a>
-      <a href="#films">Video</a>
       <a href="#examples">Examples</a>
     </nav>
   </div>
@@ -35,8 +35,8 @@
       <p class="paper-subtitle">Monocular Trajectory Reconstruction with Local Appearance, Rally-Level Modeling, and Physical Refinement</p>
       <p>FeatherTrace3D reconstructs the shuttlecock’s flight and racket contacts from a single hand-held recording.</p>
       <div class="overview-actions">
-        <a class="overview-primary" href="#contributions">See the contributions</a>
-        <a href="#replay">Try the rally replay</a>
+        <a class="overview-primary" href="#method">Explore the method</a>
+        <a href="#films">Watch the video</a>
       </div>
     </div>
     <figure class="overview-photo">
@@ -46,121 +46,20 @@
   </div>
 </section>
 
-<section class="project-contributions" id="contributions" aria-labelledby="contrib-title">
-  <div class="wrap">
-    <header class="project-heading" data-story-reveal>
-      <h2 id="contrib-title" class="reveal-title">Contributions</h2>
-    </header>
-    <article class="contribution-row" data-story-reveal>
-      <div class="contribution-copy">
-        <h3 class="reveal-title">Neural prediction</h3>
-        <p class="reveal-copy">Local image crops preserve cues lost when a detection is reduced to a point. Short-window and whole-rally attention predict a 3D position at every frame, including missed detections and racket contacts. Shared reprojection updates bring the prediction back to the image. This initialization let the physical fit converge on all 56 rendered rallies.</p>
-      </div>
-      <figure class="research-comparison reveal-evidence">
-        <figcaption>Effect of aligned appearance on neural prediction</figcaption>
-        <dl>
-          <div class="comparison-row">
-            <dt>Shuffled crops and heatmaps</dt><dd class="comparison-value">1.389 m</dd>
-            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 100%"></span></dd>
-          </div>
-          <div class="comparison-row is-highlighted">
-            <dt>Aligned crops and heatmaps</dt><dd class="comparison-value">1.274 m</dd>
-            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 91.7%"></span></dd>
-          </div>
-        </dl>
-        <p>Mean 3D error over 56 simulated rallies. After fitting, the appearance effect was inconclusive.</p>
-      </figure>
-    </article>
-    <article class="contribution-row" data-story-reveal>
-      <div class="contribution-copy">
-        <h3 class="reveal-title">Joint physical refinement</h3>
-        <p class="reveal-copy">A single objective fits flight states, quadratic drag and an editable set of contacts to the original image detections. The neural path initializes the fit and remains a soft constraint across gaps. On 56 rendered rallies the mean error was 0.50 m, compared with 1.27 m for the network alone and 1.24 m for a geometric initialization.</p>
-      </div>
-      <figure class="research-comparison reveal-evidence">
-        <figcaption>Mean 3D error in the 24-rally batch</figcaption>
-        <dl>
-          <div class="comparison-row">
-            <dt>Retime hits only</dt><dd class="comparison-value">0.749 m</dd>
-            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 100%"></span></dd>
-          </div>
-          <div class="comparison-row is-highlighted">
-            <dt>Add, remove, or retime hits</dt><dd class="comparison-value">0.378 m</dd>
-            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 50.5%"></span></dd>
-          </div>
-        </dl>
-      </figure>
-    </article>
-    <article class="contribution-row" data-story-reveal>
-      <div class="contribution-copy">
-        <h3 class="reveal-title">Cramér–Rao analysis</h3>
-        <p class="reveal-copy">With known gravity, a calibrated camera and lateral motion, a whole flight cannot be rescaled along the viewing rays while preserving its dynamics. We derive single-flight depth precision in closed form and a local bound for each rally. Across 28 model-matched rallies, the median ratio of reconstruction RMS error to its bound was 1.37.</p>
-      </div>
-      <figure class="research-comparison reveal-evidence">
-        <figcaption>Depth uncertainty at 30 fps</figcaption>
-        <dl>
-          <div class="comparison-row">
-            <dt>0.5 s of visible flight</dt><dd class="comparison-value">1.88 m</dd>
-            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 100%"></span></dd>
-          </div>
-          <div class="comparison-row is-highlighted">
-            <dt>1.0 s of visible flight</dt><dd class="comparison-value">0.33 m</dd>
-            <dd class="comparison-track" aria-hidden="true"><span style="--portion: 17.7%"></span></dd>
-          </div>
-        </dl>
-        <p>Illustrative bound at 20 m depth with 2 px detection noise.</p>
-      </figure>
-    </article>
-    <article class="contribution-row" data-story-reveal>
-      <div class="contribution-copy">
-        <h3 class="reveal-title">Real hand-held benchmark and evaluation</h3>
-        <p class="reveal-copy">One hand-held phone provides the reconstruction input. Two fixed phones triangulate an independent reference. Across 15 segments recorded at one venue, refinement reduced the mean 3D error in every segment and brought the pooled error to 0.398 m.</p>
-      </div>
-      <figure class="research-comparison reveal-evidence">
-        <figcaption>Three phones, two measurement paths</figcaption>
-        <dl class="capture-protocol"><div><dt>Phone A · monocular input</dt><dd>2,415 frames across 15 segments.</dd></div>
-          <div><dt>Phones B and C · stereo reference</dt><dd>1,600 matched frames used to score 3D distance.</dd></div></dl>
-      </figure>
-    </article>
-  </div>
-</section>
-
-<section class="project-results" id="results" aria-labelledby="results-title">
-  <div class="wrap results-layout" data-story-reveal>
-    <div class="results-copy">
-      <h2 id="results-title" class="reveal-title">Results on real footage</h2>
-      <p class="reveal-copy">Physical fitting reduced the mean distance to an independent stereo reference across 1,600 paired frames from 15 clips.</p>
-      <p class="result-context reveal-copy">The real clips came from one venue. Across 56 simulated rallies, the full method averaged 0.498 m in 3D error.</p>
-    </div>
-    <figure class="research-comparison result-comparison reveal-evidence">
-      <figcaption>Mean distance to the stereo reference</figcaption>
-      <dl>
-        <div class="comparison-row">
-          <dt>Before physical fitting</dt><dd class="comparison-value">1.078 m</dd>
-          <dd class="comparison-track" aria-hidden="true"><span style="--portion: 100%"></span></dd>
-        </div>
-        <div class="comparison-row is-highlighted">
-          <dt>After physical fitting</dt><dd class="comparison-value">0.398 m</dd>
-          <dd class="comparison-track" aria-hidden="true"><span style="--portion: 36.9%"></span></dd>
-        </div>
-      </dl>
-    </figure>
-  </div>
-</section>
-
 <section class="project-method" id="method" aria-labelledby="method-title">
   <div class="wrap">
     <header class="method-opening" data-story-reveal>
-      <h2 id="method-title" class="reveal-title">Reconstruction method</h2>
-      <p class="method-intro reveal-copy" id="method-intro">Select a stage to see its role in the reconstruction.</p>
+      <h2 id="method-title" class="reveal-title">Method overview</h2>
+      <p class="method-intro reveal-copy" id="method-intro">Follow a rally from image observations to a 3D path and a joint fit of flight and racket contacts.</p>
     </header>
     <div class="method-walkthrough" data-story-reveal>
       <div class="method-stage">
         <fieldset class="method-picker" id="method-picker" hidden>
           <legend class="sr-only">Diagram view</legend>
+          <label><input type="radio" name="method-stage" value="complete" aria-controls="method-complete" checked><span>Full diagram</span></label>
           <label><input type="radio" name="method-stage" value="observations" aria-controls="method-observations"><span>Observations</span></label>
           <label><input type="radio" name="method-stage" value="prediction" aria-controls="method-prediction"><span>3D prediction</span></label>
           <label><input type="radio" name="method-stage" value="fit" aria-controls="method-fit"><span>Physical fitting</span></label>
-          <label><input type="radio" name="method-stage" value="complete" aria-controls="method-complete" checked><span>Full diagram</span></label>
         </fieldset>
         <div class="method-readings">
           <article id="method-observations">
@@ -189,6 +88,119 @@
         </figure>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="film-band" id="films" aria-labelledby="films-title">
+  <div class="wrap section film-feature">
+    <header class="project-heading"><h2 id="films-title">Research video</h2><a class="film-download" href="assets/feathertrace3d-v7.mp4" download>Download MP4 · 3:05</a></header>
+    <div class="film-screening">
+    <video id="research-film" aria-label="FeatherTrace3D supplementary video v7" controls playsinline preload="metadata" poster="assets/research-film-poster.jpg" width="1920" height="1080"><source src="assets/feathertrace3d-v7.mp4" type="video/mp4"></video>
+    <div class="film-body"><h3>Chapters</h3><div class="film-chapters" role="group" aria-label="Research video chapters">
+      <button type="button" data-long-time="27.5"><span class="chapter-time">0:27</span> Physical refinement</button>
+      <button type="button" data-long-time="44.125"><span class="chapter-time">0:44</span> Stereo reference</button>
+      <button type="button" data-long-time="91"><span class="chapter-time">1:31</span> Baseline view</button>
+      <button type="button" data-long-time="110.792"><span class="chapter-time">1:51</span> Depth precision</button>
+    </div></div>
+    </div>
+  </div>
+</section>
+
+<section class="project-contributions" id="contributions" aria-labelledby="contrib-title">
+  <div class="wrap">
+    <header class="project-heading" data-story-reveal>
+      <h2 id="contrib-title" class="reveal-title">Contributions</h2>
+    </header>
+    <article class="contribution-row" data-story-reveal>
+      <div class="contribution-copy">
+        <h3 class="reveal-title">Neural prediction</h3>
+        <p class="reveal-copy">Local image crops preserve cues lost when a detection is reduced to a point. Short-window and whole-rally attention predict a 3D position at every frame, including missed detections and racket contacts. Shared reprojection updates bring the prediction back to the image. This initialization let the physical fit converge on all 56 rendered rallies.</p>
+        <a class="study-link" href="#neural">See the input ablations</a>
+      </div>
+      <figure class="evidence-card reveal-evidence">
+        <figcaption>What does each input add?</figcaption>
+        <p class="plot-measure">Neural prediction · mean 3D error (m)</p>
+        <img class="evidence-plot" src="assets/contribution-appearance.svg" loading="lazy" width="580" height="230" alt="Single-frame coordinates: 1.580 m. Temporal coordinates: 1.152 m. With aligned crops: 0.779 m. With shuffled crops during training: 1.195 m.">
+        <p class="evidence-note">48 held-out simulated rallies, three training seeds per model. Both crop variants use temporal coordinates. Shuffling was applied during training.</p>
+      </figure>
+    </article>
+    <article class="contribution-row" data-story-reveal>
+      <div class="contribution-copy">
+        <h3 class="reveal-title">Joint physical refinement</h3>
+        <p class="reveal-copy">A single objective fits flight states, quadratic drag and an editable set of contacts to the original image detections. The neural path initializes the fit and remains a soft constraint across gaps. On 56 rendered rallies the mean error was 0.50 m, compared with 1.27 m for the network alone and 1.24 m for a geometric initialization.</p>
+        <a class="study-link" href="#physical">Inspect the contact edits</a>
+      </div>
+      <figure class="evidence-card evidence-flight reveal-evidence">
+        <figcaption>Height through a baseline return <span>S15</span></figcaption>
+        <p class="plot-measure">Height above court (m)</p>
+        <img class="evidence-plot" src="assets/contribution-s15-height.svg" loading="lazy" width="580" height="230" alt="Fitted shuttle height and synchronized stereo measurements across 4.27 seconds of S15.">
+        <div class="plot-key"><span class="fit-key">Physical fit</span><span class="stereo-key">Stereo reference</span><span class="axis-unit">Time (s)</span></div>
+        <p class="evidence-note">On the 103 stereo-paired frames, mean <strong>3D distance</strong> fell from <strong>1.23 m to 0.63 m</strong>.</p>
+      </figure>
+    </article>
+    <article class="contribution-row" data-story-reveal>
+      <div class="contribution-copy">
+        <h3 class="reveal-title">Cramér–Rao analysis</h3>
+        <p class="reveal-copy">With known gravity, a calibrated camera and lateral motion, a whole flight cannot be rescaled along the viewing rays while preserving its dynamics. We derive single-flight depth precision in closed form and a local bound for each rally. Across 28 model-matched rallies, the median ratio of reconstruction RMS error to its bound was 1.37.</p>
+        <a class="study-link" href="#theory">Read the derivation</a>
+      </div>
+      <figure id="depth-demo" class="evidence-card precision-example reveal-evidence" aria-labelledby="precision-title">
+  <div class="precision-reading">
+    <h4 id="precision-title">How long is the shuttle visible?</h4>
+    <p>At a fixed frame rate, doubling the visible flight time reduces the idealized depth uncertainty by a factor of about 5.7.</p>
+    <div class="precision-control" hidden>
+      <label for="flight-duration">Visible flight duration</label>
+      <input id="flight-duration" type="range" min="0.5" max="1.5" step="0.1" value="0.5" aria-describedby="precision-assumptions">
+    </div>
+    <output id="flightPrecision" for="flight-duration">0.5 s · 15 frames · 1.88 m</output>
+  </div>
+  <div class="precision-plot" aria-hidden="true" hidden>
+    <p>Depth standard deviation (m)</p>
+    <canvas id="precision-chart"></canvas>
+  </div>
+  <figcaption id="precision-assumptions">Single-flight approximation at 30 fps, 20 m depth, 1,313 px focal length, 2 px noise and 9 m/s² transverse gravity. Drag is neglected and depth is nearly constant.</figcaption>
+</figure>
+    </article>
+    <article class="contribution-row" data-story-reveal>
+      <div class="contribution-copy">
+        <h3 class="reveal-title">Real hand-held benchmark and evaluation</h3>
+        <p class="reveal-copy">One hand-held phone provides the reconstruction input. Two fixed phones triangulate an independent reference. Across 15 segments recorded at one venue, refinement reduced the mean 3D error in every segment and brought the pooled error to 0.398 m.</p>
+        <a class="study-link" href="#clip-results">Compare all 15 segments</a>
+      </div>
+      <figure class="evidence-card evidence-frames reveal-evidence">
+        <figcaption>Three hand-held segments</figcaption>
+        <p class="plot-measure">Mean 3D distance to the stereo reference</p>
+        <div class="evidence-clips">
+          <a href="#segment-S6" aria-label="Open segment S6 replay, mean 3D error 0.22 metres"><img src="assets/case07_A4.jpg" width="160" height="90" loading="lazy" alt=""><span><b>S6</b> 0.22 m</span></a>
+          <a href="#segment-S5" aria-label="Open segment S5 replay, mean 3D error 0.41 metres"><img src="assets/case05_A8.jpg" width="160" height="90" loading="lazy" alt=""><span><b>S5</b> 0.41 m</span></a>
+          <a href="#segment-S15" aria-label="Open segment S15 replay, mean 3D error 0.63 metres"><img src="assets/case20_A1.jpg" width="160" height="90" loading="lazy" alt=""><span><b>S15</b> 0.63 m</span></a>
+        </div>
+        <p class="evidence-note">Select a recording to replay it. Across the full benchmark, the two fixed phones supplied a stereo reference for <strong>1,600 of 2,415</strong> frames.</p>
+      </figure>
+    </article>
+  </div>
+</section>
+
+<section class="project-results" id="results" aria-labelledby="results-title">
+  <div class="wrap results-layout" data-story-reveal>
+    <div class="results-copy">
+      <h2 id="results-title" class="reveal-title">Results on real footage</h2>
+      <p class="reveal-copy">Physical fitting reduced the mean distance to an independent stereo reference across 1,600 paired frames from 15 clips.</p>
+      <p class="result-context reveal-copy">The real clips came from one venue. Across 56 simulated rallies, the full method averaged 0.498 m in 3D error.</p>
+    </div>
+    <figure class="research-comparison result-comparison reveal-evidence">
+      <figcaption>Mean distance to the stereo reference</figcaption>
+      <dl>
+        <div class="comparison-row">
+          <dt>Before physical fitting</dt><dd class="comparison-value">1.078 m</dd>
+          <dd class="comparison-track" aria-hidden="true"><span style="--portion: 100%"></span></dd>
+        </div>
+        <div class="comparison-row is-highlighted">
+          <dt>After physical fitting</dt><dd class="comparison-value">0.398 m</dd>
+          <dd class="comparison-track" aria-hidden="true"><span style="--portion: 36.9%"></span></dd>
+        </div>
+      </dl>
+    </figure>
   </div>
 </section>
 
@@ -264,22 +276,7 @@
     </article>
   </div>
 </li>
-<li id="depth"><h3>Monocular depth precision</h3><p class="lead">Several 3D paths can share an image curve. Known gravity constrains scale. Depth precision depends on observation time and pixel noise.</p><figure class="ray-figure"><img src="assets/ray-ambiguity.svg" alt="An original path and a 0.8-times camera-centered scaling have identical image projections but different heights and 3D positions."><figcaption>Scaling by 0.8 about the camera changes height while preserving the image path. This illustrates perspective alone.</figcaption></figure><figure class="precision-example" aria-labelledby="precision-title">
-  <div class="precision-reading">
-    <h4 id="precision-title">Observation duration and depth uncertainty</h4>
-    <p>With fixed frame rate and negligible drag, depth standard deviation scales as T<sup>−5/2</sup>.</p>
-    <div class="precision-control" hidden>
-      <label for="flight-duration">Visible flight duration</label>
-      <input id="flight-duration" type="range" min="0.5" max="1.5" step="0.1" value="0.5" aria-describedby="precision-assumptions">
-    </div>
-    <output id="flightPrecision" for="flight-duration">0.5 s · 15 frames · 1.88 m</output>
-  </div>
-  <div class="precision-plot" aria-hidden="true" hidden>
-    <p>Depth standard deviation (m)</p>
-    <canvas id="precision-chart"></canvas>
-  </div>
-  <figcaption id="precision-assumptions">At 30 fps, 20 m depth, 1,313 px focal length, 2 px noise, and about 9 m/s² transverse gravity, 1 s gives about 18% of the depth uncertainty at 0.5 s.</figcaption>
-</figure>
+<li id="depth"><h3>Monocular depth precision</h3><p class="lead">Several 3D paths can share an image curve. Known gravity constrains scale. Depth precision depends on observation time and pixel noise.</p><figure class="ray-figure"><img src="assets/ray-ambiguity.svg" alt="An original path and a 0.8-times camera-centered scaling have identical image projections but different heights and 3D positions."><figcaption>Scaling by 0.8 about the camera changes height while preserving the image path. This illustrates perspective alone.</figcaption></figure><p><a href="#depth-demo">Explore the observation-duration curve</a></p>
 <details class="theory contribution-proof" id="theory"><summary>Derivation of the precision bound</summary><p class="intro">The bound quantifies depth uncertainty from pixel noise under the flight model.</p><div class="derivation"><article><h3>How does gravity fix scale?</h3><p>Scaling along viewing rays by s preserves pixels. Fix the camera center, gravity, and timestamps, then cross the difference of the flight equations with velocity to eliminate drag. With transverse gravity,</p><div class="summary-formula" role="math" aria-label="s minus one times the cross product of gravity and velocity equals zero, implying s equals one">(s − 1)(<b>g</b> × <b>v</b>) = 0 &nbsp;⇒&nbsp; s = 1</div></article><article><h3>Why does longer observation help?</h3><p>With negligible drag and nearly fixed depth, curvature grows as T². Uniform samples with independent noise add a √N factor, with N proportional to T at fixed frame rate.</p><div class="summary-formula" role="math" aria-label="Depth standard deviation scales as one over square root N times T squared">σ<sub>z</sub> ∝ 1/(√N T²) ∝ T<sup>−5/2</sup></div></article></div>
 <article class="rally-bound" id="rally-bound"><h3>A local bound for the whole rally</h3><p>Cameras, visible frames, and pixel noise set a rally-specific precision bound in meters.</p><ol class="bound-steps"><li><div><h4>Write visible observations</h4><p>For a fixed contact structure, project the flight from θ (states, shared drag, and contact times). Stack observations y over visible frames V.</p></div><div class="bound-formulas"><div>hₜ(θ) = π<sub>γₜ</sub>(pₜ(θ))</div><div>y = h(θ) + ε, ε ∼ 𝒩(0, Ω)</div></div></li><li><div><h4>Measure information in pixel motion</h4><p>H measures pixel sensitivity to θ. For known, θ-independent covariance Ω, Fisher information is the expected outer product of the Gaussian score s.</p></div><div class="bound-formulas"><div>Hₜ = (∂π<sub>γₜ</sub>/∂pₜ)(∂pₜ/∂θ), t ∈ V</div><div>s = ∇<sub>θ</sub> log L = Hᵀ Ω⁻¹(y − h)</div><div>I<sub>obs</sub> = 𝔼[ssᵀ] = Hᵀ Ω⁻¹ H</div></div></li><li><div><h4>Propagate information into 3D uncertainty</h4><p>Gₜ measures 3D position sensitivity. Motion invisible to the camera has no finite pixel-based bound. For estimable positions and locally unbiased estimates,</p></div><div class="bound-formulas"><div>Gₜ = ∂pₜ/∂θ</div><div>ker(I<sub>obs</sub>) ⊆ ker(Gₜ)</div><div>Cov(p̂ₜ) ⪰ Gₜ I<sub>obs</sub><sup>†</sup> Gₜᵀ</div></div></li><li><div><h4>Summarize one metric bound per rally</h4><p>Average the summed coordinate variances over M target frames and take the square root. Use the same frames for empirical RMSE.</p></div><div class="bound-formulas"><div>B = √[(1/M) Σₜ tr(Gₜ I† Gₜᵀ)]</div><div>Rally error ratio = RMSE / B</div></div></li></ol><p>† denotes the pseudoinverse. Pixel-only bounds use I = I<sub>obs</sub>. Rendered bounds add a simulator drag prior. Real bounds are evaluated at the fitted path. Image and learned priors may yield errors below this bound. <a href="#bound-results">Compare empirical results</a></p><details class="network theory-details"><summary>What if camera calibration is uncertain?</summary><p>When estimating γ and θ jointly, eliminate γ using the invertible calibration block.</p><div class="bound-formulas"><div>I<sub>θ|γ</sub> = I<sub>θθ</sub> − I<sub>θγ</sub> I<sub>γγ</sub><sup>−1</sup> I<sub>γθ</sub></div></div><p>The positive semidefinite term can only reduce trajectory information. Rendered bounds treat supplied cameras as exact.</p></details></article></details>
 <article class="bound-results" id="bound-results"><h4>Empirical errors and precision bounds</h4><div class="table-scroll"><table><caption>Mean per-rally bounds and RMSEs, with the median individual RMSE/bound ratio.</caption><thead><tr><th>Scenario</th><th>RMS bound (m)</th><th>RMSE (m)</th><th>Median ratio</th></tr></thead><tbody><tr class="accentrow"><td>Matched rendering · 28 rallies</td><td>0.164</td><td>0.264</td><td>1.37×</td></tr><tr><td>Mismatched rendering · 28 rallies</td><td>0.406</td><td>1.080</td><td>2.80×</td></tr><tr><td>All rendering · 56 rallies</td><td>0.285</td><td>0.672</td><td>1.95×</td></tr><tr><td>Real · 15 clips, plug-in</td><td>0.233</td><td>0.502</td><td>3.97×</td></tr></tbody></table></div><p class="caption">Rendered bounds use simulator trajectories and exact cameras. Real bounds use fitted paths and B/C reference errors. The 0.502 m averages clip RMSEs. The 0.398 m in Results averages paired-frame distances.</p><p class="finding"><b>Calibration and drag explain much of the gap.</b> On 24 rendered rallies, adding true contacts, cameras, then drag changed the median RMSE/bound ratio from 1.87 to 1.96, 1.55, and 1.13.</p></article></li>
@@ -376,19 +373,6 @@
 </section>
 <dialog id="overviewDialog" aria-labelledby="dialogTitle"><div class="dialog-bar"><h3 id="dialogTitle">Method overview</h3><button type="button" id="zoomOverview" aria-pressed="false">Zoom in</button><button id="closeOverview" type="button" autofocus>Close</button></div><div class="figure-scroll" tabindex="0" aria-label="Scroll to inspect the enlarged figure"><img src="assets/overview.svg" alt="High-resolution vector method overview"></div></dialog>
 
-<section class="film-band" id="films" aria-labelledby="films-title">
-  <div class="wrap section film-feature">
-    <header class="project-heading"><h2 id="films-title">Research video</h2></header>
-    <video id="research-film" aria-label="FeatherTrace3D supplementary video v7" controls playsinline preload="metadata" poster="assets/research-film-poster.jpg" width="1920" height="1080"><source src="assets/feathertrace3d-v7.mp4" type="video/mp4"></video>
-    <div class="film-body"><div class="film-chapters" role="group" aria-label="Research video chapters">
-      <button type="button" data-long-time="27.5">Physical refinement <span class="chapter-time">0:27</span></button>
-      <button type="button" data-long-time="44.125">Stereo reference <span class="chapter-time">0:44</span></button>
-      <button type="button" data-long-time="91">Baseline view <span class="chapter-time">1:31</span></button>
-      <button type="button" data-long-time="110.792">Depth precision <span class="chapter-time">1:51</span></button>
-    </div><a href="assets/feathertrace3d-v7.mp4" download>Download MP4 · 3:05</a></div>
-  </div>
-</section>
-
 <section class="examples-band" id="examples" aria-labelledby="examples-title">
   <header class="wrap examples-header" data-story-reveal>
     <h2 id="examples-title" class="reveal-title">Examples</h2>
@@ -404,9 +388,9 @@
   </div>
   <div class="viewer reveal-evidence">
   <div class="case-gallery" role="group" aria-label="Select a real clip">
-    <button type="button" data-case="case07_A4" aria-pressed="true"><img src="assets/case07_A4.jpg" alt="" width="96" height="54"><span><b>S6</b><small>Method example</small></span></button>
-    <button type="button" data-case="case05_A8" aria-pressed="false"><img src="assets/case05_A8.jpg" alt="" width="96" height="54"><span><b>S5</b><small>Near the overall mean</small></span></button>
-    <button type="button" data-case="case20_A1" aria-pressed="false"><img src="assets/case20_A1.jpg" alt="" width="96" height="54"><span><b>S15</b><small>Higher reference deviation</small></span></button>
+    <button type="button" id="segment-S6" data-case="case07_A4" aria-pressed="true"><img src="assets/case07_A4.jpg" alt="" width="96" height="54"><span><b>S6</b><small>Method example</small></span></button>
+    <button type="button" id="segment-S5" data-case="case05_A8" aria-pressed="false"><img src="assets/case05_A8.jpg" alt="" width="96" height="54"><span><b>S5</b><small>Near the overall mean</small></span></button>
+    <button type="button" id="segment-S15" data-case="case20_A1" aria-pressed="false"><img src="assets/case20_A1.jpg" alt="" width="96" height="54"><span><b>S15</b><small>Higher reference deviation</small></span></button>
   </div>
   <div id="broadcasts">
     <p class="case-group-title">Tournament broadcasts</p>

@@ -274,6 +274,15 @@
     if(button && button.getAttribute("aria-pressed")!=="true")selectCase(button.dataset.case,!video.paused||pendingPlay);
   });
   play.addEventListener("click",()=>{pendingPlay=false;if(video.paused)start();else video.pause();});
+  function linkedCase(hash) {
+    if (hash === "#broadcasts") return firstBroadcast;
+    return byId(hash.slice(1))?.dataset.case;
+  }
+  document.querySelector(".evidence-clips").addEventListener("click", event => {
+    const link = event.target.closest("a");
+    if (link?.hash === location.hash && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey)
+      selectCase(linkedCase(link.hash));
+  });
   const rateButtons = [...document.querySelectorAll("[data-rate]")];
   rateButtons.forEach(button => button.addEventListener("click", () => {
     video.defaultPlaybackRate = Number(button.dataset.rate);
@@ -684,7 +693,7 @@
     if (!target) return;
 
     let opened = false;
-    for (let parent = target.parentElement; parent; parent = parent.parentElement) {
+    for (let parent = target; parent; parent = parent.parentElement) {
       if (parent instanceof HTMLDetailsElement && !parent.open) {
         parent.open = true;
         opened = true;
@@ -708,6 +717,7 @@
     navigation.style.setProperty("--read-progress",scrollRange>0?bounds(window.scrollY/scrollRange,0,1):0);
     let current=sections.length-1;
     while(!nearBottom && current>=0 && sections[current].getBoundingClientRect().top>anchorTop)current--;
+    current=Math.max(0,current);
     if(current===activeSection)return;
     if(activeSection>=0)navLinks[activeSection].removeAttribute("aria-current");
     if(current>=0)navLinks[current].setAttribute("aria-current","location");
@@ -721,9 +731,10 @@
   layoutObserver.observe(document.body);
   window.addEventListener("resize",scheduleNavigation);
   updateNavigation();
-  selectCase(location.hash === "#broadcasts" && firstBroadcast ? firstBroadcast : first);
+  selectCase(linkedCase(location.hash) || first);
   window.addEventListener("hashchange", () => {
-    if (location.hash === "#broadcasts" && firstBroadcast && !sample.broadcast) selectCase(firstBroadcast);
+    const id = linkedCase(location.hash);
+    if (id && sample !== replays[id]) selectCase(id);
   });
   chart("real");refresh();
   setupPrecisionPlot();
